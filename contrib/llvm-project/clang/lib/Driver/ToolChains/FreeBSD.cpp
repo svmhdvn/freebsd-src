@@ -302,8 +302,12 @@ void freebsd::Linker::ConstructJob(Compilation &C, const JobAction &JA,
         ToolChain.AddCXXStdlibLibArgs(Args, CmdArgs);
       if (Profiling)
         CmdArgs.push_back("-lm_p");
-      else
+      else {
+        CmdArgs.push_back("--push-state");
+        CmdArgs.push_back("--as-needed");
         CmdArgs.push_back("-lm");
+        CmdArgs.push_back("--pop-state");
+      }
     }
 
     // Silence warnings when linking C code with a C++ '-stdlib' argument.
@@ -318,8 +322,12 @@ void freebsd::Linker::ConstructJob(Compilation &C, const JobAction &JA,
       addFortranRuntimeLibs(ToolChain, Args, CmdArgs);
       if (Profiling)
         CmdArgs.push_back("-lm_p");
-      else
+      else {
+        CmdArgs.push_back("--push-state");
+        CmdArgs.push_back("--as-needed");
         CmdArgs.push_back("-lm");
+        CmdArgs.push_back("--pop-state");
+      }
     }
 
     if (NeedsSanitizerDeps)
