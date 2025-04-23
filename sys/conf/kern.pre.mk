@@ -161,6 +161,12 @@ NORMAL_FWO= ${CC:N${CCACHE_BIN}} -c ${ASM_CFLAGS} ${WERROR} -o ${.TARGET} \
 # arguments become an error if the appropriate sanitizer is not enabled.
 NOSAN_C= ${NORMAL_C:N-fsanitize*:N-fno-sanitize*:N-fasan-shadow-offset*}
 
+# for XZ in the kernel
+XZ_C= ${NORMAL_C} -DXZ_USE_CRC64 \
+	-I$S/contrib/xz-embedded/freebsd/ \
+	-I$S/contrib/xz-embedded/linux/lib/xz/ \
+	-I$S/contrib/xz-embedded/linux/include/linux/
+
 # for ZSTD in the kernel (include zstd/lib/freebsd before other CFLAGS)
 ZSTD_C= ${CC} -c -DZSTD_HEAPMODE=1 -I$S/contrib/zstd/lib/freebsd ${CFLAGS} \
 	-I$S/contrib/zstd/lib -I$S/contrib/zstd/lib/common ${WERROR} \
