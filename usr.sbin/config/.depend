@@ -1,0 +1,2 @@
+config.full: /usr/lib/libc.a
+config.full: /usr/lib/libc++.a

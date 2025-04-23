@@ -253,6 +253,7 @@ main(int argc, char **argv)
 	configfile();			/* put config file into kernel*/
 	options();			/* make options .h files */
 	makefile();			/* build Makefile */
+	ninja();			/* generate build.ninja */
 	makeenv();			/* build env.c */
 	makehints();			/* build hints.c */
 	headers();			/* make a lot of .h files */
