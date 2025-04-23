@@ -28,4 +28,5 @@ tags
 .cache
 .clangd
 .ccls-cache
+.depend*
 sys/*/compile
