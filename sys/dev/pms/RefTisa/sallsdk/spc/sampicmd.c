@@ -786,7 +786,9 @@ GLOBAL bit32 mpiPhyStartCmd(
   SA_DBG1(("mpiPhyStartCmd,phyId = %d dw 2 0x%08X\n",phyId ,((phyId & SM_PHYID_MASK) | ((agPhyConfig->phyProperties & 0xfff) << SHIFT8) | (agPhyConfig->phyProperties & 0xf0000) )));
 
 
+#if defined(SALLSDK_DEBUG)
   SA_DBG2(("mpiPhyStartCmd,phyId 0x%x phyProperties 0x%x index 0x%x Sscd 0x%x\n",phyId, agPhyConfig->phyProperties,index,Sscd));
+#endif
 
   dw2 = ((phyId & SM_PHYID_MASK)                             | /* PHY id */
         ((agPhyConfig->phyProperties & 0x000000FF) << SHIFT8)| /* SLR Mode */
@@ -920,8 +922,8 @@ GLOBAL bit32 mpiSMPCmd(
 #if defined(SALLSDK_DEBUG)
   msgHeader = (mpiMsgHeader_t*)(((bit8*)pIomb) - sizeof(mpiMsgHeader_t));
   bc = (((msgHeader->Header) >> SHIFT24) & BC_MASK);
-#endif /* SALLSDK_DEBUG */
   SA_DBG6(("mpiSMPCmd: before msgHeader bc %d\n", bc));
+#endif /* SALLSDK_DEBUG */
 
   /* copy payload if it is necessary */
   if (agNULL != payload)
@@ -929,7 +931,9 @@ GLOBAL bit32 mpiSMPCmd(
     si_memcpy(pIomb, payload, sizeof(agsaSMPCmd_t));
   }
 
+#if defined(SALLSDK_DEBUG)
   SA_DBG6(("mpiSMPCmd: after msgHeader bc %d\n", bc));
+#endif
 
   /* post the IOMB to SPC */
   circularQ = &saRoot->inboundQueue[inq];

@@ -197,7 +197,9 @@ itdssTaskCompleted(
   data_status = SA_SSPRESP_GET_DATAPRES(&agSSPRespIU);
 #endif
   respLen = SA_SSPRESP_GET_RESPONSEDATALEN(&agSSPRespIU);
+#ifdef  TD_DEBUG_ENABLE
   TI_DBG6(("itdssTaskCompleted: dataPres %d. should be 1\n", data_status));
+#endif
   /* reads response data */
   saFrameReadBlock(agRoot, agParam,
                    sizeof(agsaSSPResponseInfoUnit_t),
@@ -552,7 +554,9 @@ itdssQueryTaskCompleted(
 #endif
   respLen = SA_SSPRESP_GET_RESPONSEDATALEN(&agSSPRespIU);
 
+#ifdef  TD_DEBUG_ENABLE
   TI_DBG6(("itdssQueryTaskCompleted: dataPres %d. should be 1\n", data_status));
+#endif
   /* reads response data */
   saFrameReadBlock(agRoot, agParam,
                    sizeof(agsaSSPResponseInfoUnit_t),
@@ -2207,7 +2211,7 @@ itdssIOSuccessHandler(
     TI_DBG2(("itdssIOSuccessHandler: sense data \n"));
 
     senseData.senseData = &senseDataPayload;
-    senseData.senseLen = MIN(256, senseLen);
+    senseData.senseLen = MIN(255, senseLen);
     /* debugging */
     tdhexdump("ResponseIU I", (bit8 *)&agSSPRespIU, sizeof(agsaSSPResponseInfoUnit_t));
 
@@ -4929,16 +4933,12 @@ itdssDifHandler(
   bit32                  intContext = osData->IntContext;
   bit32                  errorDetail = tiDetailOtherError;
   tdIORequestBody_t      *tdIORequestBody;
-#ifdef  TD_DEBUG_ENABLE
   agsaDifDetails_t       *DifDetail;
-#endif
 
   TI_DBG1(("itdssDifHandler: start\n"));
   TI_DBG1(("itdssDifHandler: agIOStatus 0x%x\n", agIOStatus));
   tdIORequestBody = (tdIORequestBody_t *)agIORequest->osData;
-#ifdef  TD_DEBUG_ENABLE
   DifDetail = (agsaDifDetails_t *)agParam;
-#endif
   switch (agIOStatus)
   {
   case OSSA_IO_XFR_ERROR_DIF_MISMATCH:

@@ -528,13 +528,13 @@ extern bit32 gSMDebugLevel;
 
 #else
 
-#define SM_DBG0(format)
-#define SM_DBG1(format)
-#define SM_DBG2(format)
-#define SM_DBG3(format)
-#define SM_DBG4(format)
-#define SM_DBG5(format)
-#define SM_DBG6(format)
+#define SM_DBG0(format) (void)(sizeof((format), 0))
+#define SM_DBG1(format) (void)(sizeof((format), 0))
+#define SM_DBG2(format) (void)(sizeof((format), 0))
+#define SM_DBG3(format) (void)(sizeof((format), 0))
+#define SM_DBG4(format) (void)(sizeof((format), 0))
+#define SM_DBG5(format) (void)(sizeof((format), 0))
+#define SM_DBG6(format) (void)(sizeof((format), 0))
 
 #endif /* SM_DEBUG */
 

@@ -2202,7 +2202,7 @@ GLOBAL void dmSetDeviceInfoCB(
                           agSASRequestBody,
                           &dmsaSMPCompleted
                          );
-    if (status == AGSA_RC_SUCCESS)
+    if (smstatus == AGSA_RC_SUCCESS)
     {
       /* increment the number of pending SMP */
       onePortContext->discovery.pendingSMP++;

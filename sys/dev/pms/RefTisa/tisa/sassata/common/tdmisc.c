@@ -2732,9 +2732,6 @@ osGLOBAL void
 print_tdlist_flink(tdList_t *hdr, int type, int flag)
 {
   tdList_t *hdr_tmp1 = NULL;
-#ifdef  TD_DEBUG_ENABLE
-  tdsaPortContext_t *ele1;
-#endif
 #ifdef REMOVED
   tdsaDeviceData_t *ele2;
 #endif
@@ -2761,20 +2758,20 @@ print_tdlist_flink(tdList_t *hdr, int type, int flag)
     do
     {
       /* data structure type variable = (data structure type, file name, header of the tdList) */
+#ifdef  TD_DEBUG_ENABLE
+      tdsaPortContext_t *ele1;
+
       if (flag == 1)
       {
-#ifdef  TD_DEBUG_ENABLE
         ele1 = TDLIST_OBJECT_BASE(tdsaPortContext_t, FreeLink, hdr_tmp1);
-#endif
       }
       else
       {
-#ifdef  TD_DEBUG_ENABLE
         ele1 = TDLIST_OBJECT_BASE(tdsaPortContext_t, MainLink, hdr_tmp1);
-#endif
       }
       TI_DBG6(("flist ele %d\n", ele1->id));
       TI_DBG6(("flist ele %p\n", ele1));
+#endif
       hdr_tmp1 = hdr_tmp1->flink;
     } while (hdr_tmp1 != hdr);
   }

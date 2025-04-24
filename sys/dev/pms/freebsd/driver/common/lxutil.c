@@ -201,8 +201,6 @@ STATIC agBOOLEAN agtiapi_InitResource( ag_card_info_t *thisCardInst )
   struct timeval tv;
   tv.tv_sec  = 1;
   tv.tv_usec = 0;
-  int ticksPerSec;
-  ticksPerSec = tvtohz( &tv );
   int uSecPerTick = 1000000/USEC_PER_TICK;
 
   if (pRscInfo->tiLoLevelResource.loLevelMem.count != 0) {

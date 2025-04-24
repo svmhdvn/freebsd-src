@@ -2989,7 +2989,7 @@ GLOBAL void siCheckQs(
 }
 GLOBAL void siPciCpyMem(agsaRoot_t *agRoot,
                        bit32 soffset,
-                       const void *dst,
+                       void *dst,
                        bit32 DWcount,
                        bit32 busBaseNumber
                        )

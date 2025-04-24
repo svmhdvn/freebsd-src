@@ -119,13 +119,13 @@ extern bit32 gDMDebugLevel;
 
 #else
 
-#define DM_DBG0(format)
-#define DM_DBG1(format)
-#define DM_DBG2(format)
-#define DM_DBG3(format)
-#define DM_DBG4(format)
-#define DM_DBG5(format)
-#define DM_DBG6(format)
+#define DM_DBG0(format) (void)(sizeof((format), 0))
+#define DM_DBG1(format) (void)(sizeof((format), 0))
+#define DM_DBG2(format) (void)(sizeof((format), 0))
+#define DM_DBG3(format) (void)(sizeof((format), 0))
+#define DM_DBG4(format) (void)(sizeof((format), 0))
+#define DM_DBG5(format) (void)(sizeof((format), 0))
+#define DM_DBG6(format) (void)(sizeof((format), 0))
 
 #endif /* DM_DEBUG */
 

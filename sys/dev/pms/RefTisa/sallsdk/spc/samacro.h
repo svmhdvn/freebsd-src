@@ -195,13 +195,13 @@ extern bit32 gLLDebugLevel;
 
 #else
 
-#define SA_DBG0(format)
-#define SA_DBG1(format)
-#define SA_DBG2(format)
-#define SA_DBG3(format)
-#define SA_DBG4(format)
-#define SA_DBG5(format)
-#define SA_DBG6(format)
+#define SA_DBG0(format) (void)(sizeof(format, 0))
+#define SA_DBG1(format) (void)(sizeof(format, 0))
+#define SA_DBG2(format) (void)(sizeof(format, 0))
+#define SA_DBG3(format) (void)(sizeof(format, 0))
+#define SA_DBG4(format) (void)(sizeof(format, 0))
+#define SA_DBG5(format) (void)(sizeof(format, 0))
+#define SA_DBG6(format) (void)(sizeof(format, 0))
 
 #endif
 

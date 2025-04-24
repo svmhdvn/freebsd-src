@@ -72,23 +72,3 @@
 
 #include <dev/pms/RefTisa/tisa/sassata/common/tdsatypes.h>
 #include <dev/pms/RefTisa/tisa/sassata/common/tdproto.h>
-
-/*****************************************************************************
-*! \biref tdsaReadHardwareInfo
-*
-*  Purpose:  This function reads the hardware information. This includes,
-*            PCI DeviceID, PCI VendorID, PCI Chip Revision, PCI Function
-*            Number.
-*
-*  \param  tiRoot:            Pointer to driver/port instance.
-*
-*  \return: None
-*  \note - just a place holder for now
-*****************************************************************************/
-osGLOBAL void 
-tdsaReadHardwareInfo(
-                     tiRoot_t *tiRoot
-                     )
-{
-  return;
-}

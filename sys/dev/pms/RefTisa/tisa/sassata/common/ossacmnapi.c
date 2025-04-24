@@ -2823,9 +2823,7 @@ osGLOBAL void ossaHwCB(
 
   case OSSA_HW_EVENT_MALFUNCTION:
   {
-#ifdef TD_DEBUG_ENABLE
     agsaFatalErrorInfo_t  *FatalError = (agsaFatalErrorInfo_t *)eventParm2;
-#endif
     TI_DBG1(("ossaHwCB: OSSA_HW_EVENT_MALFUNCTION \n"));
     TI_DBG1(("ossaHwCB: errorInfo0 %8X errorInfo1 %8X\n", FatalError->errorInfo0, FatalError->errorInfo1));
     TI_DBG1(("ossaHwCB: errorInfo2 %8X errorInfo3 %8X\n", FatalError->errorInfo2, FatalError->errorInfo3));
@@ -4328,10 +4326,8 @@ void ossaSSPCompleted(
                 )
 {
   tdIORequestBody_t  *pIORequestBody;
-#ifdef TD_DEBUG_ENABLE
   tiDeviceHandle_t   *tiDeviceHandle = agNULL;
   tdsaDeviceData_t   *oneDeviceData = agNULL;
-#endif
 
   TDSA_OUT_ENTER((tiRoot_t*)((tdsaRootOsData_t*)agRoot->osData)->tiRoot);
   smTraceFuncEnter(hpDBG_VERY_LOUD,"2L");
@@ -4355,10 +4351,8 @@ void ossaSSPCompleted(
   }
   if (pIORequestBody->IOCompletionFunc == agNULL)
   {
-#ifdef TD_DEBUG_ENABLE
     tiDeviceHandle = pIORequestBody->tiDevHandle;
     oneDeviceData  = (tdsaDeviceData_t *)tiDeviceHandle->tdData;
-#endif
     TI_DBG1(("ossaSSPCompleted: IOCompletionFunc is NULL \n"));
     TI_DBG1(("ossaSSPCompleted: did %d \n", oneDeviceData->id));
     smTraceFuncExit(hpDBG_VERY_LOUD, 'c', "2L");
@@ -5812,10 +5806,8 @@ GLOBAL void   ossaGetPhyProfileCB(
       TI_DBG1(("ossaGetPhyProfileCB:AGSA_SAS_PHY_OPEN_REJECT_RETRY_BACKOFF_THRESHOLD_PAGE status 0x%x phyID %d\n", status, phyID));
       if( parm !=agNULL )
       {
-#ifdef TD_DEBUG_ENABLE
         agsaSASPhyOpenRejectRetryBackOffThresholdPage_t *Backoff =
           (agsaSASPhyOpenRejectRetryBackOffThresholdPage_t *)parm;
-#endif
         TI_DBG2(("ossaGetPhyProfileCB: DW0 0x%X DW1 0x%X DW2 0x%X DW3 0x%X\n",
                  Backoff->Dword0,Backoff->Dword1,
                  Backoff->Dword2,Backoff->Dword3));
@@ -5936,11 +5928,9 @@ osGLOBAL void ossaGetDeviceInfoCB(
                     )
 {
   
-#ifdef TD_DEBUG_ENABLE
   agsaDeviceInfo_t       *agDeviceInfo;
   agsaSASDeviceInfo_t    *agSASDeviceInfo;
   agsaSATADeviceInfo_t   *agSATADeviceInfo;
-#endif
   smTraceFuncEnter(hpDBG_VERY_LOUD,"Yd");
 
   TI_DBG1(("ossaGetDeviceInfoCB: start agContext %p\n",agContext));
@@ -5951,9 +5941,7 @@ osGLOBAL void ossaGetDeviceInfoCB(
     /*ostiGetDeviceInfoIOCTLRsp(tiRoot, status, agNULL);*/
     break;
   case OSSA_DEV_INFO_NO_EXTENDED_INFO:
-#ifdef TD_DEBUG_ENABLE
     agDeviceInfo = (agsaDeviceInfo_t *)agInfo;
-#endif
     TI_DBG1(("ossaGetDeviceInfoCB: OSSA_DEV_INFO_NO_EXTENDED_INFO\n"));
     TI_DBG1(("ossaGetDeviceInfoCB: sasAddressHi 0x%08x\n", SA_DEVINFO_GET_SAS_ADDRESSHI(agDeviceInfo)));
     TI_DBG1(("ossaGetDeviceInfoCB: sasAddressLo 0x%08x\n", SA_DEVINFO_GET_SAS_ADDRESSLO(agDeviceInfo)));
@@ -5964,9 +5952,7 @@ osGLOBAL void ossaGetDeviceInfoCB(
     /*ostiGetDeviceInfoIOCTLRsp(tiRoot, status, agDeviceInfo);*/
     break;
   case OSSA_DEV_INFO_SAS_EXTENDED_INFO:
-#ifdef TD_DEBUG_ENABLE
     agSASDeviceInfo = (agsaSASDeviceInfo_t *)agInfo;
-#endif
     TI_DBG2(("ossaGetDeviceInfoCB: OSSA_DEV_INFO_SAS_EXTENDED_INFO\n"));
     TI_DBG2(("ossaGetDeviceInfoCB: sasAddressHi 0x%08x\n", SA_DEVINFO_GET_SAS_ADDRESSHI(&agSASDeviceInfo->commonDevInfo)));
     TI_DBG2(("ossaGetDeviceInfoCB: sasAddressLo 0x%08x\n", SA_DEVINFO_GET_SAS_ADDRESSLO(&agSASDeviceInfo->commonDevInfo)));
@@ -5977,9 +5963,7 @@ osGLOBAL void ossaGetDeviceInfoCB(
 
     break;
   case OSSA_DEV_INFO_SATA_EXTENDED_INFO:
-#ifdef TD_DEBUG_ENABLE
     agSATADeviceInfo = (agsaSATADeviceInfo_t *)agInfo;
-#endif
     TI_DBG2(("ossaGetDeviceInfoCB: OSSA_DEV_INFO_SATA_EXTENDED_INFO\n"));
     TI_DBG2(("ossaGetDeviceInfoCB: sasAddressHi 0x%08x\n", SA_DEVINFO_GET_SAS_ADDRESSHI(&agSATADeviceInfo->commonDevInfo)));
     TI_DBG2(("ossaGetDeviceInfoCB: sasAddressLo 0x%08x\n", SA_DEVINFO_GET_SAS_ADDRESSLO(&agSATADeviceInfo->commonDevInfo)));
@@ -8758,7 +8742,9 @@ tdIDStartTimerCB(
   }
 #endif // REMOVED
 
+#ifdef  TD_DEBUG_ENABLE
   TI_DBG1(("tdIDStartTimerCB: end, smIOAbort status %d\n", status));
+#endif
   return;
 }
 #endif // FDS_SM

@@ -3386,18 +3386,18 @@ tdsaSendTMFIoctl( tiRoot_t	     	*tiRoot,
 		  unsigned long		resetType
 		)
 {
-	bit32		status;
-	tmf_pass_through_req_t  *tmf_req = (tmf_pass_through_req_t*)agIOCTLPayload->FunctionSpecificArea;
+	bit32		status = IOCTL_CALL_SUCCESS;
 #if !(defined(__FreeBSD__))
+	tmf_pass_through_req_t  *tmf_req = (tmf_pass_through_req_t*)agIOCTLPayload->FunctionSpecificArea;
+
 	status = ostiSendResetDeviceIoctl(tiRoot, agParam2, tmf_req->pathId, tmf_req->targetId, tmf_req->lun, resetType);
-#endif
 	TI_DBG3(("Status returned from ostiSendResetDeviceIoctl is %d\n",status));
+#endif
 	if(status !=  IOCTL_CALL_SUCCESS)
 	{
 		agIOCTLPayload->Status = status;
 		return status;
 	}
-	status = IOCTL_CALL_SUCCESS;
 	return status;
 }
 
@@ -3570,9 +3570,6 @@ tdsaGetNumOfLUNIOCTL(
                void                *agParam3
                )
 {  
-  tdsaRoot_t	              *tdsaRoot			= (tdsaRoot_t *) tiRoot->tdData;
-  tdsaContext_t               *tdsaAllShared 	= (tdsaContext_t *)&tdsaRoot->tdsaAllShared;
-  agsaRoot_t	              *agRoot 			= &(tdsaAllShared->agRootInt);
   tdDeviceLUNInfoIOCTL_t	  *pDeviceLUNInfo	= agNULL;
   tiDeviceHandle_t            *devHandle 		= agNULL;
   void				          *tiRequestBody 	= agNULL;
@@ -3644,7 +3641,6 @@ osGLOBAL void ostiNumOfLUNIOCTLRsp(
   tdsaContext_t               *tdsaAllShared = (tdsaContext_t *)&tdsaRoot->tdsaAllShared;
   tiIOCTLPayload_t            *agIOCTLPayload;
   tdDeviceLUNInfoIOCTL_t	  *pDeviceLUNInfo = NULL;
-  bit32                       count = 0;
   bit32                       numOfLUN =0;
   
   TI_DBG1(("ostiNumOfLUNIOCTLRsp: start, status = %d\n", status));

@@ -946,11 +946,9 @@ void satDeviceResetCB(
 //   satInternalIo_t         *satNewIntIo = agNULL;
    satDeviceData_t         *satDevData;
    tiIORequest_t             *tiOrgIORequest;
-#ifdef  TD_DEBUG_ENABLE
    bit32                     ataStatus = 0;
    bit32                     ataError;
    agsaFisPioSetupHeader_t   *satPIOSetupHeader = agNULL;
-#endif
 //   bit32                     status;
    bit32                     report = agFALSE;
    bit32                     AbortTM = agFALSE;
@@ -1050,11 +1048,9 @@ void satDeviceResetCB(
   if (agIOStatus != OSSA_IO_SUCCESS)
    {
      /* only agsaFisPioSetup_t is expected */
-#ifdef  TD_DEBUG_ENABLE
      satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
      ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
      ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
      TI_DBG1(("satDeviceResetCB: ataStatus 0x%x ataError 0x%x\n", ataStatus, ataError));
 
       if (satOrgIOContext->NotifyOS == agTRUE)
@@ -3142,17 +3138,13 @@ itdsatDifHandler(
   bit32                  intContext = osData->IntContext;
   bit32                  errorDetail = tiDetailOtherError;
   tdIORequestBody_t      *tdIORequestBody;
-#ifdef  TD_DEBUG_ENABLE
   agsaDifDetails_t       *DifDetail;
-#endif
 
   TI_DBG2(("itdsatDifHandler: start\n"));
   TI_DBG2(("itdsatDifHandler: agIOStatus 0x%x\n", agIOStatus));
 
   tdIORequestBody = (tdIORequestBody_t *)agIORequest->osData;
-#ifdef  TD_DEBUG_ENABLE
   DifDetail = (agsaDifDetails_t *)agParam;
-#endif
   switch (agIOStatus)
   {
   case OSSA_IO_XFR_ERROR_DIF_APPLICATION_TAG_MISMATCH:
@@ -4388,12 +4380,10 @@ void satInquiryCB(
   satIOContext_t           *satOrgIOContext;
   satInternalIo_t          *satIntIo;
   satDeviceData_t          *satDevData;
-#ifdef  TD_DEBUG_ENABLE
   tdsaDeviceData_t         *tdsaDeviceData;
   bit32                     ataStatus = 0;
   bit32                     ataError;
   agsaFisPioSetupHeader_t  *satPIOSetupHeader = agNULL;
-#endif
   scsiRspSense_t           *pSense;
   tiIniScsiCmnd_t          *scsiCmnd;
   tiIORequest_t            *tiOrgIORequest;
@@ -4413,9 +4403,7 @@ void satInquiryCB(
   satIOContext           = (satIOContext_t *) ioContext;
   satIntIo               = satIOContext->satIntIoContext;
   satDevData             = satIOContext->pSatDevData;
-#ifdef  TD_DEBUG_ENABLE
   tdsaDeviceData         = (tdsaDeviceData_t *)satDevData->satSaDeviceData;
-#endif
   tiScsiRequest          = satIOContext->tiScsiXchg;
   if (satIntIo == agNULL)
   {
@@ -4521,12 +4509,10 @@ void satInquiryCB(
       (agIOStatus == OSSA_IO_SUCCESS && agFirstDword != agNULL && agIOInfoLen != 0)
     )
  {
-#ifdef  TD_DEBUG_ENABLE
    // only agsaFisPioSetup_t is expected
    satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
    ataStatus         = satPIOSetupHeader->status;   // ATA Status register
    ataError          = satPIOSetupHeader->error;    // ATA Eror register
-#endif
    TI_DBG1(("satInquiryCB: ataStatus 0x%x ataError 0x%x\n", ataStatus, ataError));
    /* Process abort case */
    if (agIOStatus == OSSA_IO_ABORTED)

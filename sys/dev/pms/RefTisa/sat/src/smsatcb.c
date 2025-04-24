@@ -713,11 +713,9 @@ smsatDeviceResetCB(
     smSatInternalIo_t        *satIntIo;
 //    smSatInternalIo_t         *satNewIntIo = agNULL;
     smDeviceData_t           *oneDeviceData;
-#ifdef  TD_DEBUG_ENABLE
     agsaFisPioSetupHeader_t  *satPIOSetupHeader = agNULL;
     bit32                     ataStatus = 0;
     bit32                     ataError;
-#endif
 //    bit32                     status;
     bit32                     AbortTM = agFALSE;
     smDeviceHandle_t         *smDeviceHandle;
@@ -795,12 +793,10 @@ smsatDeviceResetCB(
     }
     if (agIOStatus != OSSA_IO_SUCCESS)
     {
-#ifdef  TD_DEBUG_ENABLE
        /* only agsaFisPioSetup_t is expected */
        satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
        ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
        ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
        SM_DBG1(("smsatDeviceResetCB: ataStatus 0x%x ataError 0x%x!!!\n", ataStatus, ataError));
        /* TM completed */
        tdsmEventCB( smRoot,
@@ -7636,10 +7632,8 @@ smsatDecrementPendingIO(
   smDeviceData_t       *oneDeviceData   = satIOContext->pSatDevData;
   smSatInternalIo_t    *satIntIo        = satIOContext->satIntIoContext;
   smSatIOContext_t     *satOrgIOContext = satIOContext->satOrgIOContext;
-#ifdef  TD_DEBUG_ENABLE
   smIORequestBody_t    *smIORequestBody = agNULL;
   smIORequestBody = (smIORequestBody_t *)satIOContext->smRequestBody;
-#endif
 
   SM_DBG3(("smsatDecrementPendingIO: start\n"));
 
@@ -8726,11 +8720,9 @@ smsatIDStartCB(
   smIORequest_t             *smOrgIORequest = agNULL;
 //  agsaFisRegD2HData_t       *deviceToHostFisData = agNULL;
 //  bit8                      signature[8];
-#ifdef  TD_DEBUG_ENABLE
   agsaFisPioSetupHeader_t   *satPIOSetupHeader = agNULL;
   bit32                      ataStatus = 0;
   bit32                      ataError;
-#endif
   agsaSATAIdentifyData_t    *pSATAIdData;
   bit16                     *tmpptr, tmpptr_tmp;
   bit32                      x;
@@ -8899,12 +8891,10 @@ smsatIDStartCB(
        (agIOStatus == OSSA_IO_SUCCESS && agFirstDword != agNULL && agIOInfoLen != 0)
      )
   {
-#ifdef  TD_DEBUG_ENABLE
     /* only agsaFisPioSetup_t is expected */
     satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
     ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
     ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
     SM_DBG1(("smsatIDStartCB: ataStatus 0x%x ataError 0x%x!!!\n", ataStatus, ataError));
 
     smsatDecrementPendingIO(smRoot, smAllShared, satIOContext);
@@ -9023,9 +9013,7 @@ smsatIOCompleted(
 //  satDeviceData_t           *pSatDevData;
   smDeviceData_t            *oneDeviceData;
   smScsiRspSense_t          *pSense;
-#ifdef  TD_DEBUG_ENABLE
   smIniScsiCmnd_t           *pScsiCmnd;
-#endif
   agsaFisRegHostToDevice_t  *hostToDevFis = agNULL;
   bit32                      ataStatus = 0;
   bit32                      ataError;
@@ -9042,9 +9030,7 @@ smsatIOCompleted(
 
   pSense          = satIOContext->pSense;
   oneDeviceData   = satIOContext->pSatDevData;
-#ifdef  TD_DEBUG_ENABLE
   pScsiCmnd       = satIOContext->pScsiCmnd;
-#endif
   hostToDevFis    = satIOContext->pFis;
 
 
@@ -9391,16 +9377,12 @@ smsatDifHandler(
 {
   smIORequestBody_t      *smIORequestBody;
   bit32                  errorDetail = smDetailOtherError;
-#ifdef  TD_DEBUG_ENABLE
   agsaDifDetails_t       *DifDetail;
-#endif
 
   SM_DBG1(("smsatDifHandler: start\n"));
   SM_DBG1(("smsatDifHandler: agIOStatus 0x%x\n", agIOStatus));
   smIORequestBody = (smIORequestBody_t *)agIORequest->osData;
-#ifdef  TD_DEBUG_ENABLE
   DifDetail = (agsaDifDetails_t *)agParam;
-#endif
 
   switch (agIOStatus)
   {
@@ -9599,11 +9581,9 @@ smsatInquiryCB(
   smScsiRspSense_t         *pSense;
   smIniScsiCmnd_t          *scsiCmnd;
   smIORequest_t            *smOrgIORequest;
-#ifdef  TD_DEBUG_ENABLE
   agsaFisPioSetupHeader_t  *satPIOSetupHeader = agNULL;
   bit32                     ataStatus = 0;
   bit32                     ataError;
-#endif
   smScsiInitiatorRequest_t *smScsiRequest; /* TD's smScsiXchg */
   smScsiInitiatorRequest_t *smOrgScsiRequest; /* OS's smScsiXchg */
   agsaSATAIdentifyData_t   *pSATAIdData;
@@ -9730,12 +9710,10 @@ smsatInquiryCB(
       (agIOStatus == OSSA_IO_SUCCESS && agFirstDword != agNULL && agIOInfoLen != 0)
     )
  {
-#ifdef  TD_DEBUG_ENABLE
    /* only agsaFisPioSetup_t is expected */
    satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
    ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
    ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
    SM_DBG1(("smsatInquiryCB: ataStatus 0x%x ataError 0x%x!!!\n", ataStatus, ataError));
 
    /* Process abort case */
@@ -11143,11 +11121,9 @@ smsatCheckPowerModeCB(
   smSatInternalIo_t        *satIntIo;
 //  satDeviceData_t         *satDevData;
   smDeviceData_t           *oneDeviceData;
-#ifdef  TD_DEBUG_ENABLE
   bit32                     ataStatus = 0;
   bit32                     ataError;
   agsaFisPioSetupHeader_t  *satPIOSetupHeader = agNULL;
-#endif
   bit32                     AbortTM = agFALSE;
   smDeviceHandle_t         *smDeviceHandle;
 
@@ -11229,11 +11205,9 @@ smsatCheckPowerModeCB(
  if (agIOStatus != OSSA_IO_SUCCESS)
   {
     /* only agsaFisPioSetup_t is expected */
-#ifdef  TD_DEBUG_ENABLE
     satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
     ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
     ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
     SM_DBG1(("smsatCheckPowerModeCB: ataStatus 0x%x ataError 0x%x!!!\n", ataStatus, ataError));
     /* TM completed */
     tdsmEventCB( smRoot,
@@ -11307,11 +11281,9 @@ smsatCheckPowerModePassCB(
   smIORequestBody_t         *smOrgIORequestBody;
 //  satDeviceData_t         *satDevData;
   smDeviceData_t           *oneDeviceData;
-#ifdef  TD_DEBUG_ENABLE
   bit32                     ataStatus = 0;
   bit32                     ataError;
   agsaFisPioSetupHeader_t  *satPIOSetupHeader = agNULL;
-#endif
  
   smScsiRspSense_t			*pSense;
   bit8						bSenseKey = 0;
@@ -11376,11 +11348,9 @@ smsatCheckPowerModePassCB(
   if (agIOStatus != OSSA_IO_SUCCESS)
   {
     /* only agsaFisPioSetup_t is expected */
-#ifdef  TD_DEBUG_ENABLE
     satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
     ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
     ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
     SM_DBG1(("smsatCheckPowerModePassCB: ataStatus 0x%x ataError 0x%x!!!\n", ataStatus, ataError));
    
 
@@ -11464,11 +11434,9 @@ smsatIDDataPassCB(
   smIORequestBody_t         *smOrgIORequestBody;
 //  satDeviceData_t         *satDevData;
   smDeviceData_t           *oneDeviceData;
-#ifdef  TD_DEBUG_ENABLE
   bit32                     ataStatus = 0;
   bit32                     ataError;
   agsaFisPioSetupHeader_t  *satPIOSetupHeader = agNULL;
-#endif
  
   smScsiRspSense_t			*pSense;
   bit8						bSenseKey = 0;
@@ -11533,11 +11501,9 @@ smsatIDDataPassCB(
   if (agIOStatus != OSSA_IO_SUCCESS)
   {
     /* only agsaFisPioSetup_t is expected */
-#ifdef  TD_DEBUG_ENABLE
     satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
     ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
     ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
     SM_DBG1(("smsatIDDataPassCB: ataStatus 0x%x ataError 0x%x!!!\n", ataStatus, ataError));
    
 
@@ -11650,11 +11616,9 @@ smsatResetDeviceCB(
 //  satDeviceData_t         *satDevData;
   smDeviceData_t            *oneDeviceData;
   smIORequest_t             *smOrgIORequest;
-#ifdef  TD_DEBUG_ENABLE
   bit32                      ataStatus = 0;
   bit32                      ataError;
   agsaFisPioSetupHeader_t   *satPIOSetupHeader = agNULL;
-#endif
   bit32                      status;
   smDeviceHandle_t          *smDeviceHandle;
 
@@ -11737,11 +11701,9 @@ smsatResetDeviceCB(
   if (agIOStatus != OSSA_IO_SUCCESS)
   {
     /* only agsaFisPioSetup_t is expected */
-#ifdef  TD_DEBUG_ENABLE
     satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
     ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
     ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
     SM_DBG1(("smsatResetDeviceCB: ataStatus 0x%x ataError 0x%x!!!\n", ataStatus, ataError));
     /* TM completed */
     tdsmEventCB( smRoot,
@@ -11857,11 +11819,9 @@ smsatDeResetDeviceCB(
   smSatInternalIo_t         *satIntIo;
 //  satDeviceData_t           *satDevData;
   smDeviceData_t            *oneDeviceData;
-#ifdef  TD_DEBUG_ENABLE
   bit32                      ataStatus = 0;
   bit32                      ataError;
   agsaFisPioSetupHeader_t   *satPIOSetupHeader = agNULL;
-#endif
   bit32                      AbortTM = agFALSE;
   smDeviceHandle_t          *smDeviceHandle;
 
@@ -11941,11 +11901,9 @@ smsatDeResetDeviceCB(
  if (agIOStatus != OSSA_IO_SUCCESS)
   {
     /* only agsaFisPioSetup_t is expected */
-#ifdef  TD_DEBUG_ENABLE
     satPIOSetupHeader = (agsaFisPioSetupHeader_t *)&(agFirstDword->PioSetup);
     ataStatus     = satPIOSetupHeader->status;   /* ATA Status register */
     ataError      = satPIOSetupHeader->error;    /* ATA Eror register   */
-#endif
     SM_DBG1(("smsatDeResetDeviceCB: ataStatus 0x%x ataError 0x%x!!!\n", ataStatus, ataError));
     /* TM completed */
     tdsmEventCB( smRoot,
@@ -12155,7 +12113,6 @@ smLocalPhyControlCB(
   smDeviceHandle_t          *smDeviceHandle;
   smDeviceData_t            *oneDeviceData = agNULL;
   smIORequest_t             *currentTaskTag;
-  agsaDevHandle_t           *agDevHandle = agNULL;
 
   SM_DBG1(("smLocalPhyControlCB: start phyId 0x%x phyOperation 0x%x status 0x%x\n",phyId,phyOperation,status));
 
@@ -12195,7 +12152,6 @@ smLocalPhyControlCB(
     if (status == OSSA_SUCCESS)
     {
       SM_DBG2(("smLocalPhyControlCB: callback to TD layer with success\n"));
-      agDevHandle = oneDeviceData->agDevHandle;
       SM_DBG2(("smLocalPhyControlCB: satPendingIO %d satNCQMaxIO %d\n", oneDeviceData->satPendingIO, oneDeviceData->satNCQMaxIO ));
       SM_DBG1(("smLocalPhyControlCB: satPendingNCQIO %d satPendingNONNCQIO %d\n", oneDeviceData->satPendingNCQIO, oneDeviceData->satPendingNONNCQIO));
       oneDeviceData->satDriveState = SAT_DEV_STATE_NORMAL;
@@ -12950,7 +12906,6 @@ smsatSMARTEnablePassCB(
  //smSatInternalIo_t        *satNewIntIo = agNULL;
 //  satDeviceData_t           *satDevData;
   smDeviceData_t           *oneDeviceData;
-  smIniScsiCmnd_t          *scsiCmnd;
   smIORequest_t            *smOrgIORequest;
   //bit32                     status;
   smScsiRspSense_t          *pSense;
@@ -12975,7 +12930,6 @@ smsatSMARTEnablePassCB(
     SM_DBG4(("smsatSMARTEnablePassCB: External smSatInternalIo_t satIntIoContext\n"));
     satOrgIOContext = satIOContext;
     smOrgIORequest  = smIORequestBody->smIORequest;
-    scsiCmnd        = satOrgIOContext->pScsiCmnd;   
 	pSense          = satOrgIOContext->pSense;
   }
   else
@@ -12993,7 +12947,6 @@ smsatSMARTEnablePassCB(
     }
     smOrgIORequestBody     = (smIORequestBody_t *)satOrgIOContext->smRequestBody;
     smOrgIORequest         = (smIORequest_t *)smOrgIORequestBody->smIORequest;
-    scsiCmnd               = satOrgIOContext->pScsiCmnd; 
 	pSense          = satOrgIOContext->pSense;
   }
   smIORequestBody->ioCompleted = agTRUE;
@@ -13108,10 +13061,7 @@ smsatSMARTRStatusPassCB(
   smScsiRspSense_t          *pSense;
   smIORequest_t             *smOrgIORequest;
 
-  agsaFisRegHostToDevice_t  *hostToDevFis = agNULL;
   bit32                      ataStatus = 0;
-  smScsiInitiatorRequest_t  *smScsiRequest; /* tiScsiXchg */
-  smScsiInitiatorRequest_t  *smOrgScsiRequest; /* tiScsiXchg */
   agsaFisRegD2HHeader_t     *statDevToHostFisHeader = agNULL;
 //  agsaFisRegD2HData_t        statDevToHostFisData;
   smIniScsiCmnd_t           *scsiCmnd;
@@ -13127,7 +13077,6 @@ smsatSMARTRStatusPassCB(
   satIOContext           = (smSatIOContext_t *) ioContext;
   satIntIo               = satIOContext->satIntIoContext;
   oneDeviceData          = satIOContext->pSatDevData;
-  hostToDevFis           = satIOContext->pFis;
   smRoot                 = oneDeviceData->smRoot;
   smIntRoot              = (smIntRoot_t *)smRoot->smData;  
   smAllShared            = (smIntContext_t *)&smIntRoot->smAllShared;
@@ -13138,9 +13087,7 @@ smsatSMARTRStatusPassCB(
     satOrgIOContext = satIOContext;
     smOrgIORequest  = smIORequestBody->smIORequest;
     pSense          = satOrgIOContext->pSense;
-    smOrgScsiRequest   = satOrgIOContext->smScsiXchg;
      /* ATA command response payload */
-    smScsiRequest   = satOrgIOContext->smScsiXchg;
     scsiCmnd        = satOrgIOContext->pScsiCmnd;   
 	SM_DBG1((" 0x%02x, 0x%02x, 0x%02x, 0x%02x,\n", scsiCmnd->cdb[0], scsiCmnd->cdb[1],scsiCmnd->cdb[2], scsiCmnd->cdb[3]));
 	SM_DBG1((" 0x%02x, 0x%02x, 0x%02x, 0x%02x,\n", scsiCmnd->cdb[4], scsiCmnd->cdb[5],scsiCmnd->cdb[6], scsiCmnd->cdb[7]));
@@ -13166,9 +13113,7 @@ smsatSMARTRStatusPassCB(
     smOrgIORequestBody     = (smIORequestBody_t *)satOrgIOContext->smRequestBody;
     smOrgIORequest         = (smIORequest_t *)smOrgIORequestBody->smIORequest;
     
-    smOrgScsiRequest   = satOrgIOContext->smScsiXchg;
     /* ATA command response payload */
-    smScsiRequest   =  (smScsiInitiatorRequest_t *)&(satIntIo->satIntSmScsiXchg);
     scsiCmnd        = satOrgIOContext->pScsiCmnd; 
 	pSense          = satOrgIOContext->pSense;
   }
@@ -13313,8 +13258,6 @@ smsatSMARTReadLogCB(
 
   agsaFisRegHostToDevice_t      *hostToDevFis = agNULL;
   bit32                         ataStatus = 0;
-  smScsiInitiatorRequest_t      *smScsiRequest; /* tiScsiXchg */
-  smScsiInitiatorRequest_t      *smOrgScsiRequest; /* tiScsiXchg */
 //	  satReadLogExtSelfTest_t	*virtAddr1;
 //	  satSmartReadLogSelfTest_t *virtAddr2;
   //bit8						*pLogPage;
@@ -13323,7 +13266,6 @@ smsatSMARTReadLogCB(
   
   agsaFisRegD2HHeader_t         *statDevToHostFisHeader = agNULL;
 //	  agsaFisRegD2HData_t		 statDevToHostFisData;
-  smIniScsiCmnd_t               *scsiCmnd;
 //	  bit32 					 lenReceived = 0;
   bit8                          bSenseKey = 0;
   bit16                         bSenseCodeInfo = 0;
@@ -13347,11 +13289,8 @@ smsatSMARTReadLogCB(
     satOrgIOContext = satIOContext;
     smOrgIORequest	= smIORequestBody->smIORequest;
     pSense			= satOrgIOContext->pSense;
-    smOrgScsiRequest   = satOrgIOContext->smScsiXchg;
 
     /* ATA command response payload */
-    smScsiRequest	= satOrgIOContext->smScsiXchg;
-    scsiCmnd		= satOrgIOContext->pScsiCmnd;	 
 
 
   }
@@ -13374,11 +13313,8 @@ smsatSMARTReadLogCB(
     smOrgIORequest		   = (smIORequest_t *)smOrgIORequestBody->smIORequest;
 	
     pSense		  = satOrgIOContext->pSense;
-    smOrgScsiRequest   = satOrgIOContext->smScsiXchg;
 
     /* ATA command response payload */
-    smScsiRequest	=  (smScsiInitiatorRequest_t *)&(satIntIo->satIntSmScsiXchg);
-    scsiCmnd		= satOrgIOContext->pScsiCmnd;  
   }
 	  
   smIORequestBody->ioCompleted = agTRUE;
@@ -13547,13 +13483,9 @@ smsatPassthroughCB(
   smDeviceData_t		*oneDeviceData;
   smScsiRspSense_t		*pSense;
   smIORequest_t 		*smOrgIORequest;
-  agsaFisRegHostToDevice_t	*hostToDevFis = agNULL;
   bit32 			 ataStatus = 0;
-  smScsiInitiatorRequest_t	*smScsiRequest; /* tiScsiXchg */
-  smScsiInitiatorRequest_t	*smOrgScsiRequest; /* tiScsiXchg */
 	  
   agsaFisRegD2HHeader_t 	*statDevToHostFisHeader = agNULL;
-  smIniScsiCmnd_t		*scsiCmnd;
   bit8				 bSenseKey = 0;
   bit16 			 bSenseCodeInfo = 0;
 	  
@@ -13565,7 +13497,6 @@ smsatPassthroughCB(
   satIOContext			 = (smSatIOContext_t *) ioContext;
   satIntIo			 = satIOContext->satIntIoContext;
   oneDeviceData 		 = satIOContext->pSatDevData;
-  hostToDevFis			 = satIOContext->pFis;
   smRoot			 = oneDeviceData->smRoot;
   smIntRoot 			 = (smIntRoot_t *)smRoot->smData;  
   smAllShared			 = (smIntContext_t *)&smIntRoot->smAllShared;
@@ -13576,11 +13507,8 @@ smsatPassthroughCB(
     satOrgIOContext = satIOContext;
     smOrgIORequest = smIORequestBody->smIORequest;
     pSense = satOrgIOContext->pSense;
-    smOrgScsiRequest   = satOrgIOContext->smScsiXchg;
 
     /* ATA command response payload */
-    smScsiRequest	= satOrgIOContext->smScsiXchg;
-    scsiCmnd		= satOrgIOContext->pScsiCmnd;	 
   }
   else
   {
@@ -13599,11 +13527,8 @@ smsatPassthroughCB(
     smOrgIORequest = (smIORequest_t *)smOrgIORequestBody->smIORequest;
 		
     pSense = satOrgIOContext->pSense;
-    smOrgScsiRequest   = satOrgIOContext->smScsiXchg;
 
     /* ATA command response payload */
-    smScsiRequest	=  (smScsiInitiatorRequest_t *)&(satIntIo->satIntSmScsiXchg);
-    scsiCmnd		= satOrgIOContext->pScsiCmnd;  
   }
 	  
   smIORequestBody->ioCompleted = agTRUE;

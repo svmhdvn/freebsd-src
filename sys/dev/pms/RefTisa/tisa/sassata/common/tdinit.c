@@ -2930,9 +2930,7 @@ tdsaDeviceDataInit(
 {
   tdsaRoot_t        *tdsaRoot      = (tdsaRoot_t *) tiRoot->tdData;
   tdsaContext_t     *tdsaAllShared = (tdsaContext_t *)&tdsaRoot->tdsaAllShared;
-#ifdef TD_DEBUG_ENABLE
   tdsaPortContext_t *tdsaPortContext = (tdsaPortContext_t *)tdsaAllShared->PortContextMem;
-#endif
   tdsaDeviceData_t  *tdsaDeviceData =
     (tdsaDeviceData_t *)tdsaAllShared->DeviceMem;
   int i;

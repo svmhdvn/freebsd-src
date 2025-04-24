@@ -11263,16 +11263,12 @@ smsatReportLun(
   bit32                 reportLunLen;
   smScsiReportLun_t     *pReportLun;
   smIniScsiCmnd_t       *scsiCmnd;
-#ifdef  TD_DEBUG_ENABLE
   smDeviceData_t        *pSatDevData;
-#endif
 
   pSense     = satIOContext->pSense;
   pReportLun = (smScsiReportLun_t *) dataBuffer;
   scsiCmnd   = &smScsiRequest->scsiCmnd;
-#ifdef  TD_DEBUG_ENABLE
   pSatDevData = satIOContext->pSatDevData;
-#endif
   SM_DBG5(("smsatReportLun: start\n"));
 //  smhexdump("smsatReportLun: cdb", (bit8 *)scsiCmnd, 16);
   /* Find the buffer size allocated by Initiator */
@@ -17642,7 +17638,6 @@ smsatPassthrough(
 {
   smScsiRspSense_t          *pSense;
   smIniScsiCmnd_t           *scsiCmnd;
-  smDeviceData_t            *pSatDevData;
   agsaFisRegHostToDevice_t	  *fis;
   bit32                      status;
   bit32 					agRequestType;
@@ -17651,7 +17646,6 @@ smsatPassthrough(
 	  
   pSense      = satIOContext->pSense;
   scsiCmnd    = &smScsiRequest->scsiCmnd;  
-  pSatDevData = satIOContext->pSatDevData;
   fis           = satIOContext->pFis;
 
   SM_DBG1(("smsatPassthrough: START!!!\n"));
@@ -19727,17 +19721,13 @@ smsatResetDevice(
   bit32                     status;
   bit32                     agRequestType;
   agsaFisRegHostToDevice_t  *fis;
-#ifdef  TD_DEBUG_ENABLE
   smIORequestBody_t         *smIORequestBody;
   smSatInternalIo_t           *satIntIoContext;
-#endif
 
   fis           = satIOContext->pFis;
   SM_DBG1(("smsatResetDevice: start\n"));
-#ifdef  TD_DEBUG_ENABLE
   satIntIoContext = satIOContext->satIntIoContext;
   smIORequestBody = satIntIoContext->satIntRequestBody;
-#endif
   SM_DBG5(("smsatResetDevice: satIOContext %p smIORequestBody %p\n", satIOContext, smIORequestBody));
   /* any fis should work */
   fis->h.fisType        = 0x27;                   /* Reg host to device */
@@ -19798,17 +19788,13 @@ smsatDeResetDevice(
   bit32                     status;
   bit32                     agRequestType;
   agsaFisRegHostToDevice_t  *fis;
-#ifdef  TD_DEBUG_ENABLE
   smIORequestBody_t         *smIORequestBody;
   smSatInternalIo_t           *satIntIoContext;
-#endif
 
   fis           = satIOContext->pFis;
   SM_DBG1(("smsatDeResetDevice: start\n"));
-#ifdef  TD_DEBUG_ENABLE
   satIntIoContext = satIOContext->satIntIoContext;
   smIORequestBody = satIntIoContext->satIntRequestBody;
-#endif
   SM_DBG5(("smsatDeResetDevice: satIOContext %p smIORequestBody %p\n", satIOContext, smIORequestBody));
   /* any fis should work */
   fis->h.fisType        = 0x27;                   /* Reg host to device */
@@ -20651,15 +20637,11 @@ smsatPrintSgl(
       )
 {
   bit32                     i=0;
-#ifdef  TD_DEBUG_ENABLE
   agsaSgl_t                 *agSgl;
-#endif
 
   for (i=0;i<idx;i++)
   {
-#ifdef  TD_DEBUG_ENABLE
     agSgl = &(agEsgl->descriptor[i]);
-#endif
     SM_DBG3(("smsatPrintSgl: agSgl %d upperAddr 0x%08x lowerAddr 0x%08x len 0x%08x ext 0x%08x\n",
       i, agSgl->sgUpper, agSgl->sgLower, agSgl->len,  agSgl->extReserved));
   }

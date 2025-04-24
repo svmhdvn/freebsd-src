@@ -883,7 +883,7 @@ GLOBAL void siUpdateBarOffsetTable(agsaRoot_t     *agRoot, bit32   Spc_Type);
 
 GLOBAL void siPciCpyMem(agsaRoot_t *agRoot,
                        bit32 soffset,
-                       const void *dst,
+                       void *dst,
                        bit32 DWcount,
                        bit32 busBaseNumber
                        );

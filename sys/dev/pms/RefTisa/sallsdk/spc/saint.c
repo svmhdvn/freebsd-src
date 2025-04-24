@@ -815,7 +815,9 @@ saDelayedInterruptHandler(
     {
 
       SA_DBG1(("saDelayedInterruptHandler: vi %d  Error %08X\n",interruptVectorIndex,  SCRATCH_PAD1_V_ERROR_STATE( pad1 )));
+#if defined(SALLSDK_DEBUG)
       SA_DBG1(("saDelayedInterruptHandler: Sp 1 %08X Hr0 %08X Hr1 %08X\n",pad1,host_reg0,host_reg1 ));
+#endif
       SA_DBG1(("saDelayedInterruptHandler: SCRATCH_PAD1_V_ERROR_STATE      %08X\n", SCRATCH_PAD1_V_ERROR_STATE( pad1 )));
       SA_DBG1(("saDelayedInterruptHandler: SCRATCH_PAD1_V_ILA_ERROR_STATE  %08X\n", SCRATCH_PAD1_V_ILA_ERROR_STATE( pad1 )));
       SA_DBG1(("saDelayedInterruptHandler: SCRATCH_PAD1_V_RAAE_ERROR_STATE %08X\n", SCRATCH_PAD1_V_RAAE_ERROR_STATE( pad1 )));
@@ -828,7 +830,9 @@ saDelayedInterruptHandler(
     }
     else
     {
+#if defined(SALLSDK_DEBUG)
       SA_DBG2(("saDelayedInterruptHandler: Fatal Check VI %d SCRATCH_PAD1 %08X host_reg0 %08X host_reg1 %08X\n",interruptVectorIndex, pad1,host_reg0,host_reg1));
+#endif
       SA_DBG2(("saDelayedInterruptHandler:  ScratchPad0 0x%x ScratchPad1 0x%x\n",
                                 ossaHwRegReadExt(agRoot, PCIBAR0,V_Scratchpad_0_Register),
                                 ossaHwRegReadExt(agRoot, PCIBAR0,V_Scratchpad_1_Register) ));
@@ -2221,6 +2225,7 @@ GLOBAL void siEventSATASignatureRcvd(
 
 
   SA_DBG5(("agsaFisRegDeviceToHost_t:\n"));
+#if defined(SALLSDK_DEBUG)
   SA_DBG5(("  fisType         = %x\n", fisD2H->h.fisType));
   SA_DBG5(("  i_pmPort        = %x\n", fisD2H->h.i_pmPort));
   SA_DBG5(("  status          = %x\n", fisD2H->h.status));
@@ -2242,7 +2247,7 @@ GLOBAL void siEventSATASignatureRcvd(
   SA_DBG5(("  reserved6       = %x\n", fisD2H->d.reserved6));
 
   SA_DBG5(("  reserved7 (32)  = %08X\n", fisD2H->d.reserved7));
-
+#endif
   SA_DBG5(("siEventSATASignatureRcvd: GOOD signatureFIS data\n"));
 
 #if defined(SALLSDK_DEBUG)

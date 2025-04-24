@@ -1842,7 +1842,7 @@ GLOBAL bit32 mpiInitialize(agsaRoot_t *agRoot,
   static spc_configMainDescriptor_t mainCfg;              /* main part of MPI configuration */
   static spc_inboundQueueDescriptor_t inQueueCfg;         /* Inbound queue HW configuration structure */
   static spc_outboundQueueDescriptor_t outQueueCfg;       /* Outbound queue HW configuration structure */
-  bit16 qIdx, i, indexoffset;                      /* Queue index */
+  bit16 qIdx, i;                      /* Queue index */
   bit16 mIdx = 0;                                  /* Memory region index */
   bit32 MSGUCfgTblDWIdx, GSTLenMPIS;
   bit32 MSGUCfgTblBase, ret = AGSA_RC_SUCCESS;
@@ -2246,7 +2246,6 @@ GLOBAL bit32 mpiInitialize(agsaRoot_t *agRoot,
   /* TP:Bd pcibar   */
 
   /* index offset */
-  indexoffset = 0;
   memOffset   = 0;
 
   /* Memory regions for the inbound queues */
@@ -2346,7 +2345,6 @@ GLOBAL bit32 mpiInitialize(agsaRoot_t *agRoot,
             (qIdx == (maxinbound - 1)))
         {
           mIdx++;
-          indexoffset += MAX_QUEUE_EACH_MEM;
           memOffset = 0;
         }
 
@@ -2358,7 +2356,6 @@ GLOBAL bit32 mpiInitialize(agsaRoot_t *agRoot,
   /* TP:73  outbound queues  */
 
   /* index offset */
-  indexoffset = 0;
   memOffset = 0;
   /* Let's process the memory regions for the outbound queues */
   for(qIdx = 0; qIdx < maxoutbound; qIdx++)
@@ -2481,7 +2478,6 @@ GLOBAL bit32 mpiInitialize(agsaRoot_t *agRoot,
             (qIdx == (maxoutbound - 1)))
         {
           mIdx++;
-          indexoffset += MAX_QUEUE_EACH_MEM;
           memOffset =0;
         }
       }
@@ -4584,7 +4580,9 @@ GLOBAL bit32 siScratchDump(agsaRoot_t *agRoot)
   SCRATCH_PAD3 = ossaHwRegReadExt(agRoot, PCIBAR0, MSGU_SCRATCH_PAD_3);
 #endif  /* SALLSDK_DEBUG */
   SCRATCH_PAD1 = ossaHwRegReadExt(agRoot, PCIBAR0, MSGU_SCRATCH_PAD_1);
+#ifdef SALLSDK_DEBUG
   SA_DBG1(("siScratchDump: SCRATCH_PAD 0 0x%08x 1 0x%08x 2 0x%08x 3 0x%08x\n",SCRATCH_PAD0,SCRATCH_PAD1,SCRATCH_PAD2,SCRATCH_PAD3 ));
+#endif
 
   if((SCRATCH_PAD1 & SCRATCH_PAD1_V_RESERVED) == SCRATCH_PAD1_V_RESERVED  )
   {
@@ -4594,7 +4592,7 @@ GLOBAL bit32 siScratchDump(agsaRoot_t *agRoot)
   {
     if((SCRATCH_PAD1 & SCRATCH_PAD1_V_RAAE_MASK) == SCRATCH_PAD1_V_RAAE_MASK  )
     {
-      SA_DBG1(("siScratchDump: SCRATCH_PAD1 valid 0x%08x\n",SCRATCH_PAD0 ));
+      SA_DBG1(("siScratchDump: SCRATCH_PAD1 valid 0x%08x\n",SCRATCH_PAD1 ));
       SA_DBG1(("siScratchDump: RAAE ready 0x%08x\n",SCRATCH_PAD1 & SCRATCH_PAD1_V_RAAE_MASK));
     }
     if((SCRATCH_PAD1 & SCRATCH_PAD1_V_ILA_MASK) == SCRATCH_PAD1_V_ILA_MASK)

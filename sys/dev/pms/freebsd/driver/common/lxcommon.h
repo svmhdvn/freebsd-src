@@ -507,13 +507,13 @@ bit8 *data; //buffer
 #ifdef AGTIAPI_FLOW_DEBUG
 #define AGTIAPI_FLOW(format, a...)  printf(format, ## a)
 #else
-#define AGTIAPI_FLOW(format, a...)
+#define AGTIAPI_FLOW(...) (void)(sizeof((__VA_ARGS__), 0))
 #endif
 
 #ifdef AGTIAPI_DEBUG
 #define AGTIAPI_PRINTK(format, a...)  printf(format, ## a)
 #else
-#define AGTIAPI_PRINTK(format, a...)
+#define AGTIAPI_PRINTK(...) (void)(sizeof((__VA_ARGS__), 0))
 #endif
 
 #ifdef AGTIAPI_INIT_DEBUG
@@ -521,26 +521,26 @@ bit8 *data; //buffer
 /* to avoid losing the logs */
 #define AGTIAPI_INIT_MDELAY(dly)  mdelay(dly)
 #else
-#define AGTIAPI_INIT(format, a...)
+#define AGTIAPI_INIT(...) (void)(sizeof((__VA_ARGS__), 0))
 #define AGTIAPI_INIT_MDELAY(dly)
 #endif
 
 #ifdef AGTIAPI_INIT2_DEBUG
 #define AGTIAPI_INIT2(format, a...)  printf(format, ## a)
 #else
-#define AGTIAPI_INIT2(format, a...)
+#define AGTIAPI_INIT2() (void)(sizeof((__VA_ARGS__), 0))
 #endif
 
 #ifdef AGTIAPI_INIT_MEM_DEBUG
 #define AGTIAPI_INITMEM(format, a...)  printf(format, ## a)
 #else
-#define AGTIAPI_INITMEM(format, a...)
+#define AGTIAPI_INITMEM(...) (void)(sizeof((__VA_ARGS__), 0))
 #endif
 
 #ifdef AGTIAPI_IO_DEBUG
 #define AGTIAPI_IO(format, a...)       printf(format, ## a)
 #else
-#define AGTIAPI_IO(format, a...)
+#define AGTIAPI_IO(...) (void)(sizeof((__VA_ARGS__), 0))
 #endif
 
 #ifdef AGTIAPI_LOAD_DELAY

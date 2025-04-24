@@ -2108,7 +2108,7 @@ static void saUpdateIOMap(
  *
  */
 /*******************************************************************************/
-agsaIORequestDesc_t* saGetRequestFromFreePool(
+static agsaIORequestDesc_t* saGetRequestFromFreePool(
                                             agsaRoot_t      *agRoot,
                                             agsaContext_t   *agContext
                                             )
@@ -2154,7 +2154,7 @@ agsaIORequestDesc_t* saGetRequestFromFreePool(
  *
  */
 /*******************************************************************************/
-void saReturnRequestToFreePool(
+static void saReturnRequestToFreePool(
                             agsaRoot_t          *agRoot,
                             agsaIORequestDesc_t *pRequest
                             )

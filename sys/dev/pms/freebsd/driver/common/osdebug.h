@@ -99,8 +99,8 @@ do {                                    \
               printf format ;           \
 } while (0)
 #else
-#define TIDEBUG_MSG(mask, val, format)
-#define TIDEBUG_MSG0(format)
+#define TIDEBUG_MSG(mask, val, format) (void)(sizeof((format), 0))
+#define TIDEBUG_MSG0(format) (void)(sizeof((format), 0))
 #endif
 
 /***************************************************************************

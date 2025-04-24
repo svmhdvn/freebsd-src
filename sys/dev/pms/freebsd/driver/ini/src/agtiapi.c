@@ -724,7 +724,7 @@ static int agtiapi_attach( device_t devx )
   int			        lenRecv;
   char			        buffer [256], *pLastUsedChar;
   union ccb *ccb;
-  int bus, tid, lun;
+  int bus, tid;
   struct ccb_setasync csa;
 
   AGTIAPI_PRINTK("agtiapi_attach: start dev %p thisCard %d\n", devx, thisCard);
@@ -903,7 +903,6 @@ static int agtiapi_attach( device_t devx )
   pmsc->sim  = lsim;
   bus = cam_sim_path(pmsc->sim);
   tid = CAM_TARGET_WILDCARD;
-  lun = CAM_LUN_WILDCARD;
   ccb = xpt_alloc_ccb_nowait();
   if (ccb == agNULL)
   {

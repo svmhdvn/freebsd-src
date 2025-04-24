@@ -1,0 +1,127 @@
+cpu		HAMMER			# aka K8, aka Opteron & Athlon64
+device		acpi
+device		acpi_video
+device		aesni		# AES-NI OpenCrypto module
+device		atacore		# Core ATA functionality
+device		ataintel	# Intel
+device		ataisa		# ISA bus support
+device		atapci		# PCI bus support; only generic chipset support
+device		atkbd
+device		atkbdc
+device		bpf
+device		cd		#SCSI CD-ROMs
+device		coretemp
+device		cpuctl
+device		crypto		# core crypto support
+device		cryptodev	# /dev/crypto for access to h/w
+device		da		#SCSI direct access devices (aka disks)
+device		dpms		# DPMS suspend & resume via VESA BIOS
+device		efidev
+device		efirtc
+device		ehci
+device		ether
+device		evdev		# input event device support
+device		intpm
+device		ipmi
+device		isa
+device		jedec_dimm
+device		kvm_clock	# KVM paravirtual clock driver
+device		loop
+device		md		#Memory/malloc disk
+device		netmap
+device		nmdm		#back-to-back tty devices
+device		ohci
+device		ossl		# OpenSSL OpenCrypto module
+device		pci
+device		psm
+device		pty		#BSD-style compatibility pseudo ttys
+device		puc
+device		sc
+device		scbus		#base SCSI code
+device		smb
+device		smbios
+device		smbus		# Bus support, required for smb below.
+device		uart
+device		uhci
+device		usb
+device		vga
+device		virtio		# Generic VirtIO bus (required)
+device		virtio_balloon	# VirtIO Memory Balloon device
+device		virtio_blk	# VirtIO Block device
+device		virtio_console	# VirtIO Console device
+device		virtio_gpu	# VirtIO GPU device
+device		virtio_mmio	# VirtIO MMIO Interface
+device		virtio_pci	# VirtIO PCI Interface
+device		virtio_random	# VirtIO Entropy device
+device		virtio_scmi	# VirtIO SCMI device
+device		virtio_scsi	# VirtIO SCSI device
+device		vlan
+device		vt
+device		vt_efifb	# EFI framebuffer
+device		vt_vbefb	# VBE framebuffer
+device		vt_vga		# VGA
+device		vtnet		# VirtIO Ethernet device
+device		xhci
+device		xz		# xz_embedded LZMA de-compression library
+device		zlib		# gzip/zlib compression/decompression library
+ident		MYARPVPS
+options 	BPF_JITTER
+options 	CAPABILITIES	# fine-grained rights on file descriptors
+options 	CAPABILITY_MODE	# sandboxes with no global namespace access
+options 	CD9660			#ISO 9660 filesystem
+options 	COMPAT_FREEBSD11
+options 	COMPAT_FREEBSD12
+options 	COMPAT_FREEBSD13
+options 	COMPAT_FREEBSD14
+options 	DEVICE_POLLING
+options 	EFIRT
+options 	ENABLE_ALART	# Control alarm on Intel intpm driver
+options 	EVDEV_SUPPORT	# evdev support in legacy drivers
+options 	FDESCFS			#File descriptor filesystem
+options 	FFS			#Fast filesystem
+options 	GEOM_GATE		# Userland services.
+options 	GEOM_JOURNAL		# Journaling.
+options 	GEOM_LABEL		# Providers labelization.
+options 	GEOM_PART_BSD		# BSD disklabel
+options 	GEOM_PART_BSD64		# BSD disklabel64
+options 	GEOM_PART_EBR		# Extended Boot Records
+options 	GEOM_PART_GPT		# GPT partitioning
+options 	GZIO
+options 	INET			#Internet communications protocols
+options 	INET6			#IPv6 communications protocols
+options 	IOMMU			# Enable IOMMU support
+options 	IPFIREWALL		#firewall
+options 	IPFIREWALL_NAT		#ipfw kernel nat support
+options 	IPFIREWALL_VERBOSE	#enable logging to syslogd(8)
+options 	IPI_PREEMPTION
+options 	KERN_TLS		# TLS transmit and receive offload
+options 	LIBALIAS
+options 	LIBMCHAIN
+options 	MAXCPU=2
+options 	MAXMEMDOM=1
+options 	MSDOSFS			#MS DOS File System (FAT, FAT32)
+options 	NETLINK
+options 	NULLFS			#NULL filesystem
+options 	PCI_HP			# PCI-Express native HotPlug
+options 	PCI_IOV			# PCI SR-IOV support
+options 	PREEMPTION
+options 	PROCFS			#Process filesystem (requires PSEUDOFS)
+options 	PSEUDOFS		#Pseudo-filesystem framework
+options 	RACCT
+options 	RATELIMIT		# TX rate limiting support
+options 	RCTL
+options 	SCHED_ULE
+options 	SMP			# Symmetric MultiProcessor Kernel
+options 	SOFTUPDATES
+options 	STATS
+options 	TCP_OFFLOAD		# TCP offload support.
+options 	TCP_RACK
+options 	TMPFS			#Efficient memory filesystem
+options 	UFS_DIRHASH
+options 	UFS_GJOURNAL
+options 	VESA
+options 	X86BIOS
+options 	ZSTDIO
+options 	_KPOSIX_PRIORITY_SCHEDULING
+options  	TCPHPTS
+options  	TCP_RFC7413		# TCP Fast Open
