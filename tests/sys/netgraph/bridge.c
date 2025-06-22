@@ -90,40 +90,40 @@ ATF_TC_BODY(basic, dummy)
 
 	ng_init();
 	ng_errors(PASS);
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_basic_bridge:");
 	ng_errors(FAIL);
 
-	ng_mkpeer(".", "a", "bridge", "link0");
-	ng_name("a", "bridge");
-	ng_connect(".", "b", "bridge:", "link1");
-	ng_connect(".", "c", "bridge:", "link2");
+	ng_mkpeer(".", "bridge_basic_a", "bridge", "link0");
+	ng_name("bridge_basic_a", "bridge_basic_bridge");
+	ng_connect(".", "bridge_basic_b", "bridge_basic_bridge:", "link1");
+	ng_connect(".", "bridge_basic_c", "bridge_basic_bridge:", "link2");
 
 	/* do not bounce back */
-	ng_register_data("a", get_data0);
+	ng_register_data("bridge_basic_a", get_data0);
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
-	ng_send_data("a", &msg4, sizeof(msg4));
+	ng_send_data("bridge_basic_a", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0);
 
 	/* send to others */
-	ng_register_data("b", get_data1);
-	ng_register_data("c", get_data2);
+	ng_register_data("bridge_basic_b", get_data1);
+	ng_register_data("bridge_basic_c", get_data2);
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
-	ng_send_data("a", &msg4, sizeof(msg4));
+	ng_send_data("bridge_basic_a", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 1 && r[2] == 1);
 
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 2;
-	ng_send_data("b", &msg4, sizeof(msg4));
+	ng_send_data("bridge_basic_b", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 1 && r[1] == 0 && r[2] == 1);
 
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 3;
-	ng_send_data("c", &msg4, sizeof(msg4));
+	ng_send_data("bridge_basic_c", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 1 && r[1] == 1 && r[2] == 0);
 
@@ -131,34 +131,34 @@ ATF_TC_BODY(basic, dummy)
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
 	msg4.eh.ether_dhost[5] = 3;
-	ng_send_data("a", &msg4, sizeof(msg4));
+	ng_send_data("bridge_basic_a", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 0 && r[2] == 1);
 
 	/* inspect mac table */
 	ng_register_msg(get_tablesize);
-	rm.tok = ng_send_msg("bridge:", "gettable");
+	rm.tok = ng_send_msg("bridge_basic_bridge:", "gettable");
 	rm.cnt = 0;
 	ng_handle_events(50, &rm);
 	ATF_CHECK(rm.cnt == 3);
 
 	/* remove a link */
-	ng_rmhook(".", "b");
+	ng_rmhook(".", "bridge_basic_b");
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
 	msg4.eh.ether_dhost[5] = 0;
-	ng_send_data("a", &msg4, sizeof(msg4));
+	ng_send_data("bridge_basic_a", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 0 && r[2] == 1);
 
 	/* inspect mac table */
 	ng_register_msg(get_tablesize);
-	rm.tok = ng_send_msg("bridge:", "gettable");
+	rm.tok = ng_send_msg("bridge_basic_bridge:", "gettable");
 	rm.cnt = 0;
 	ng_handle_events(50, &rm);
 	ATF_CHECK(rm.cnt == 2);
 
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_basic_bridge:");
 }
 
 ATF_TC(persistence);
@@ -171,16 +171,16 @@ ATF_TC_BODY(persistence, dummy)
 {
 	ng_init();
 	ng_errors(PASS);
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_persistence_bridge:");
 	ng_errors(FAIL);
 
-	ng_mkpeer(".", "a", "bridge", "link0");
-	ng_name("a", "bridge");
+	ng_mkpeer(".", "bridge_persistence_a", "bridge", "link3");
+	ng_name("bridge_persistence_a", "bridge_persistence_bridge");
 
-	ng_send_msg("bridge:", "setpersistent");
-	ng_rmhook(".", "a");
+	ng_send_msg("bridge_persistence_bridge:", "setpersistent");
+	ng_rmhook(".", "bridge_persistence_a");
 
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_persistence_bridge:");
 }
 
 ATF_TC(loop);
@@ -196,17 +196,17 @@ ATF_TC_BODY(loop, dummy)
 
 	ng_init();
 	ng_errors(PASS);
-	ng_shutdown("bridge1:");
-	ng_shutdown("bridge2:");
+	ng_shutdown("bridge_loop_bridge1:");
+	ng_shutdown("bridge_loop_bridge2:");
 	ng_errors(FAIL);
 
-	ng_mkpeer(".", "a", "bridge", "link0");
-	ng_name("a", "bridge1");
-	ng_mkpeer(".", "b", "bridge", "link1");
-	ng_name("b", "bridge2");
+	ng_mkpeer(".", "bridge_loop_a", "bridge", "link4");
+	ng_name("bridge_loop_a", "bridge_loop_bridge1");
+	ng_mkpeer(".", "bridge_loop_b", "bridge", "link5");
+	ng_name("bridge_loop_b", "bridge_loop_bridge2");
 
-	ng_register_data("a", get_data0);
-	ng_register_data("b", get_data1);
+	ng_register_data("bridge_loop_a", get_data0);
+	ng_register_data("bridge_loop_b", get_data1);
 
 	/*-
 	 * Open loop
@@ -215,11 +215,11 @@ ATF_TC_BODY(loop, dummy)
 	 * . <    |
 	 *    \-- bridge2
 	 */
-	ng_connect("bridge1:", "link11", "bridge2:", "link11");
+	ng_connect("bridge_loop_bridge1:", "link44", "bridge_loop_bridge2:", "link44");
 
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
-	ng_send_data("a", &msg4, sizeof(msg4));
+	ng_send_data("bridge_loop_a", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 1);
 
@@ -230,12 +230,12 @@ ATF_TC_BODY(loop, dummy)
 	 * . <     |       |
 	 *    \-- bridge2 -/
 	 */
-	ng_connect("bridge1:", "link12", "bridge2:", "link12");
+	ng_connect("bridge_loop_bridge1:", "link45", "bridge_loop_bridge2:", "link45");
 
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
 	ng_errors(PASS);
-	ng_send_data("a", &msg4, sizeof(msg4));
+	ng_send_data("bridge_loop_a", &msg4, sizeof(msg4));
 	ATF_CHECK_ERRNO(ELOOP, errno != 0);	/* loop might be detected */
 	ng_errors(FAIL);
 	for (i = 0; i < 10; i++)	/* don't run forever */
@@ -243,8 +243,8 @@ ATF_TC_BODY(loop, dummy)
 			break;
 	ATF_CHECK(r[0] == 0 && r[1] == 1);
 
-	ng_shutdown("bridge1:");
-	ng_shutdown("bridge2:");
+	ng_shutdown("bridge_loop_bridge1:");
+	ng_shutdown("bridge_loop_bridge2:");
 }
 
 ATF_TC(many_unicasts);
@@ -262,17 +262,17 @@ ATF_TC_BODY(many_unicasts, dummy)
 
 	ng_init();
 	ng_errors(PASS);
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_many_unicasts_bridge:");
 	ng_errors(FAIL);
 
-	ng_mkpeer(".", "a", "bridge", "link0");
-	ng_name("a", "bridge");
-	ng_register_data("a", get_data0);
+	ng_mkpeer(".", "bridge_many_unicasts_a", "bridge", "link6");
+	ng_name("bridge_many_unicasts_a", "bridge_many_unicasts_bridge");
+	ng_register_data("bridge_many_unicasts_a", get_data0);
 
 	/* learn MAC */
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[3] = 0xff;
-	ng_send_data("a", &msg4, sizeof(msg4));
+	ng_send_data("bridge_many_unicasts_a", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0);
 
@@ -284,10 +284,10 @@ ATF_TC_BODY(many_unicasts, dummy)
 	ng_counter_clear(r);
 	for (i = 1; i <= HOOKS; i++)
 	{
-		char		hook[20];
+		char		hook[NG_HOOKSIZ];
 
-		snprintf(hook, sizeof(hook), "link%d", i);
-		ng_connect(".", hook, "bridge:", hook);
+		snprintf(hook, sizeof(hook), "link6%d", i);
+		ng_connect(".", hook, "bridge_many_unicasts_bridge:", hook);
 		ng_register_data(hook, get_data2);
 
 		msg4.eh.ether_shost[4] = i >> 8;
@@ -305,7 +305,7 @@ ATF_TC_BODY(many_unicasts, dummy)
 	ng_register_msg(get_tablesize);
 	rm.cnt = 0;
 	ng_errors(PASS);
-	rm.tok = ng_send_msg("bridge:", "gettable");
+	rm.tok = ng_send_msg("bridge_many_unicasts_bridge:", "gettable");
 	ng_errors(FAIL);
 	if (rm.tok == (u_int32_t)-1)
 	{
@@ -316,7 +316,7 @@ ATF_TC_BODY(many_unicasts, dummy)
 	ATF_CHECK(rm.cnt == HOOKS + 1);
 	atf_tc_expect_pass();
 
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_many_unicasts_bridge:");
 }
 
 ATF_TC(many_broadcasts);
@@ -333,17 +333,17 @@ ATF_TC_BODY(many_broadcasts, dummy)
 
 	ng_init();
 	ng_errors(PASS);
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_many_broadcasts_bridge:");
 	ng_errors(FAIL);
 
-	ng_mkpeer(".", "a", "bridge", "link0");
-	ng_name("a", "bridge");
-	ng_register_data("a", get_data0);
+	ng_mkpeer(".", "bridge_many_broadcasts_a", "bridge", "link7");
+	ng_name("bridge_many_broadcasts_a", "bridge_many_broadcasts_bridge");
+	ng_register_data("bridge_many_broadcasts_a", get_data0);
 
 	/* learn MAC */
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[3] = 0xff;
-	ng_send_data("a", &msg4, sizeof(msg4));
+	ng_send_data("bridge_many_broadcasts_a", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0);
 
@@ -357,8 +357,8 @@ ATF_TC_BODY(many_broadcasts, dummy)
 	{
 		char		hook[20];
 
-		snprintf(hook, sizeof(hook), "link%d", i);
-		ng_connect(".", hook, "bridge:", hook);
+		snprintf(hook, sizeof(hook), "link7%d", i);
+		ng_connect(".", hook, "bridge_many_broadcasts_bridge:", hook);
 		ng_register_data(hook, get_data3);
 
 		msg4.eh.ether_shost[4] = i >> 8;
@@ -376,7 +376,7 @@ ATF_TC_BODY(many_broadcasts, dummy)
 	ATF_CHECK(r[0] == HOOKS);
 	atf_tc_expect_pass();
 
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_many_broadcasts_bridge:");
 }
 
 ATF_TC(uplink_private);
@@ -392,33 +392,33 @@ ATF_TC_BODY(uplink_private, dummy)
 
 	ng_init();
 	ng_errors(PASS);
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_uplink_private_bridge:");
 
-	ng_mkpeer(".", "u1", "bridge", "uplink1");
+	ng_mkpeer(".", "bridge_uplink_private_u1", "bridge", "uplink1");
 	if (errno > 0)
 		atf_tc_skip("uplinks are not supported.");
 	ng_errors(FAIL);
-	ng_name("u1", "bridge");
-	ng_register_data("u1", get_data1);
-	ng_connect(".", "u2", "bridge:", "uplink2");
-	ng_register_data("u2", get_data2);
-	ng_connect(".", "l0", "bridge:", "link0");
-	ng_register_data("l0", get_data0);
-	ng_connect(".", "l3", "bridge:", "link3");
-	ng_register_data("l3", get_data3);
+	ng_name("bridge_uplink_private_u1", "bridge_uplink_private_bridge");
+	ng_register_data("bridge_uplink_private_u1", get_data1);
+	ng_connect(".", "bridge_uplink_private_u2", "bridge_uplink_private_bridge:", "uplink2");
+	ng_register_data("bridge_uplink_private_u2", get_data2);
+	ng_connect(".", "bridge_uplink_private_l8", "bridge_uplink_private_bridge:", "link8");
+	ng_register_data("bridge_uplink_private_l8", get_data0);
+	ng_connect(".", "bridge_uplink_private_l9", "bridge_uplink_private_bridge:", "link9");
+	ng_register_data("bridge_uplink_private_l9", get_data3);
 
 	/* unknown unicast 0 from uplink1 */
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
-	ng_send_data("u1", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_u1", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 0 && r[2] == 1 && r[3] == 0);
 
-	/* unknown unicast 2 from link0 */
+	/* unknown unicast 2 from link8 */
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 0;
 	msg4.eh.ether_dhost[5] = 2;
-	ng_send_data("l0", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_l8", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 1 && r[2] == 1 && r[3] == 0);
 
@@ -426,15 +426,15 @@ ATF_TC_BODY(uplink_private, dummy)
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 2;
 	msg4.eh.ether_dhost[5] = 0;
-	ng_send_data("u2", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_u2", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 1 && r[1] == 0 && r[2] == 0 && r[3] == 0);
 
-	/* known unicast 0 from link3 */
+	/* known unicast 0 from link9 */
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 3;
 	msg4.eh.ether_dhost[5] = 0;
-	ng_send_data("l3", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_l9", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 1 && r[1] == 0 && r[2] == 0 && r[3] == 0);
 
@@ -442,14 +442,14 @@ ATF_TC_BODY(uplink_private, dummy)
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
 	msg4.eh.ether_dhost[5] = 2;
-	ng_send_data("u1", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_u1", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 0 && r[2] == 1 && r[3] == 0);
 
-	/* (un)known unicast 2 from link0 */
+	/* (un)known unicast 2 from link8 */
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 0;
-	ng_send_data("l0", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_l8", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 1 && r[2] == 1 && r[3] == 0);
 
@@ -457,14 +457,14 @@ ATF_TC_BODY(uplink_private, dummy)
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
 	msg4.eh.ether_dhost[0] = 0xff;
-	ng_send_data("u1", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_u1", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 1 && r[1] == 0 && r[2] == 1 && r[3] == 1);
 
-	/* unknown multicast 2 from link0 */
+	/* unknown multicast 2 from link9 */
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 0;
-	ng_send_data("l0", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_l8", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 1 && r[2] == 1 && r[3] == 1);
 
@@ -472,25 +472,25 @@ ATF_TC_BODY(uplink_private, dummy)
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 1;
 	memset(msg4.eh.ether_dhost, 0xff, sizeof(msg4.eh.ether_dhost));
-	ng_send_data("u1", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_u1", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 1 && r[1] == 0 && r[2] == 1 && r[3] == 1);
 
-	/* broadcast from link0 */
+	/* broadcast from link8 */
 	ng_counter_clear(r);
 	msg4.eh.ether_shost[5] = 0;
-	ng_send_data("l0", &msg4, sizeof(msg4));
+	ng_send_data("bridge_uplink_private_l8", &msg4, sizeof(msg4));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 1 && r[2] == 1 && r[3] == 1);
 
 	/* inspect mac table */
 	ng_register_msg(get_tablesize);
-	rm.tok = ng_send_msg("bridge:", "gettable");
+	rm.tok = ng_send_msg("bridge_uplink_private_bridge:", "gettable");
 	rm.cnt = 0;
 	ng_handle_events(50, &rm);
 	ATF_CHECK(rm.cnt == 2);
 
-	ng_shutdown("bridge:");
+	ng_shutdown("bridge_uplink_private_bridge:");
 }
 
 ATF_TC(uplink_classic);

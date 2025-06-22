@@ -49,9 +49,9 @@ ATF_TC_BODY(send_recv, dummy)
 	ng_counter_t	r;
 
 	ng_init();
-	ng_connect(".", "a", ".", "b");
-	ng_register_data("b", get_data0);
-	ng_send_data("a", msg, sizeof(msg));
+	ng_connect(".", "basic_tc_send_recv_a", ".", "basic_tc_send_recv_b");
+	ng_register_data("basic_tc_send_recv_b", get_data0);
+	ng_send_data("basic_tc_send_recv_a", msg, sizeof(msg));
 
 	ng_counter_clear(r);
 	ng_handle_events(50, &r);
@@ -70,35 +70,35 @@ ATF_TC_BODY(node, dummy)
 	ng_counter_t	r;
 
 	ng_init();
-	ng_mkpeer(".", "a", "hub", "a");
-	ng_name("a", "test hub");
+	ng_mkpeer(".", "basic_tc_node_a", "hub", "basic_tc_node_a");
+	ng_name("basic_tc_node_a", "basic_tc_node_hub");
 
 	ng_errors(PASS);
-	ng_name("a", "test hub");
+	ng_name("basic_tc_node_a", "basic_tc_node_hub");
 	ng_errors(FAIL);
 	if (errno == EADDRINUSE)
 		atf_tc_expect_fail("PR241954");
 	ATF_CHECK_ERRNO(0, 1);
 	atf_tc_expect_pass();
 
-	ng_connect(".", "b", "test hub:", "b");
-	ng_connect(".", "c", "test hub:", "c");
-	ng_register_data("a", get_data0);
-	ng_register_data("b", get_data1);
-	ng_register_data("c", get_data2);
+	ng_connect(".", "basic_tc_node_b", "basic_tc_node_hub:", "basic_tc_node_b");
+	ng_connect(".", "basic_tc_node_c", "basic_tc_node_hub:", "basic_tc_node_c");
+	ng_register_data("basic_tc_node_a", get_data0);
+	ng_register_data("basic_tc_node_b", get_data1);
+	ng_register_data("basic_tc_node_c", get_data2);
 
 	ng_counter_clear(r);
-	ng_send_data("a", msg, sizeof(msg));
+	ng_send_data("basic_tc_node_a", msg, sizeof(msg));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 1 && r[2] == 1);
 
-	ng_rmhook(".", "b");
+	ng_rmhook(".", "basic_tc_node_b");
 	ng_counter_clear(r);
-	ng_send_data("a", msg, sizeof(msg));
+	ng_send_data("basic_tc_node_a", msg, sizeof(msg));
 	ng_handle_events(50, &r);
 	ATF_CHECK(r[0] == 0 && r[1] == 0 && r[2] == 1);
 
-	ng_shutdown("test hub:");
+	ng_shutdown("basic_tc_node_hub:");
 }
 
 ATF_TC(message);
@@ -110,13 +110,13 @@ ATF_TC_HEAD(message, conf)
 ATF_TC_BODY(message, dummy)
 {
 	ng_init();
-	ng_mkpeer(".", "a", "hub", "a");
-	ng_name("a", "test hub");
+	ng_mkpeer(".", "basic_tc_message_a", "hub", "basic_tc_message_a");
+	ng_name("basic_tc_message_a", "basic_tc_message_hub");
 
-	ng_send_msg("test hub:", "setpersistent");
-	ng_rmhook(".", "a");
+	ng_send_msg("basic_tc_message_hub:", "setpersistent");
+	ng_rmhook(".", "basic_tc_message_a");
 
-	ng_shutdown("test hub:");
+	ng_shutdown("basic_tc_message_hub:");
 }
 
 ATF_TC(same_name);
@@ -128,19 +128,19 @@ ATF_TC_HEAD(same_name, conf)
 ATF_TC_BODY(same_name, dummy)
 {
 	ng_init();
-	ng_mkpeer(".", "a", "hub", "a");
-	ng_name("a", "test");
+	ng_mkpeer(".", "basic_tc_same_name_a", "hub", "basic_tc_same_name_a");
+	ng_name("basic_tc_same_name_a", "basic_tc_same_name_hub");
 
 	ng_errors(PASS);
-	ng_connect(".", "a", ".", "b");
+	ng_connect(".", "basic_tc_same_name_a", ".", "basic_tc_same_name_b");
 	ATF_CHECK_ERRNO(EEXIST, 1);
-	ng_connect(".", "b", ".", "b");
+	ng_connect(".", "basic_tc_same_name_b", ".", "basic_tc_same_name_b");
 	ATF_CHECK_ERRNO(EEXIST, 1);
-	ng_name(".", "test");
+	ng_name(".", "basic_tc_same_name_hub");
 	ATF_CHECK_ERRNO(EADDRINUSE, 1);
 
 	ng_errors(FAIL);
-	ng_shutdown("test:");
+	ng_shutdown("basic_tc_same_name_hub:");
 }
 
 ATF_TC(queuelimit);
@@ -157,13 +157,13 @@ ATF_TC_BODY(queuelimit, dummy)
 	const int	MAX = 1000;
 
 	ng_init();
-	ng_connect(".", "a", ".", "b");
-	ng_register_data("b", get_data0);
+	ng_connect(".", "basic_tc_queuelimit_a", ".", "basic_tc_queuelimit_b");
+	ng_register_data("basic_tc_queuelimit_b", get_data0);
 
 	ng_errors(PASS);
 	for (i = 0; i < MAX; i++)
 	{
-		ng_send_data("a", msg, sizeof(msg));
+		ng_send_data("basic_tc_queuelimit_a", msg, sizeof(msg));
 		if (errno != 0)
 			break;
 		/* no ng_handle_events -> messages stall */
