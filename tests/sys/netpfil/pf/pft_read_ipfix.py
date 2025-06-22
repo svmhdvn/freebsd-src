@@ -59,8 +59,13 @@ def parse_ipfix(p):
 
 		c = datafl.payload
 
-def receive(recvif, recvport):
-	pkts = sp.sniff(iface=recvif, timeout=65, filter="udp port 2055")
+def receive(args):
+	pkts = sp.sniff(
+	    iface=args.recvif,
+	    count=args.count or 0,
+	    timeout=args.timeout or None,
+	    filter="udp port 2055"
+	)
 
 	if len(pkts) == 0:
 		print("No data")
@@ -73,7 +78,7 @@ def receive(recvif, recvport):
 		if not udp:
 			continue
 
-		if udp.dport != recvport:
+		if udp.dport != args.port:
 			continue
 
 		if not sp.NetflowHeader in pkt:
@@ -93,16 +98,20 @@ def receive(recvif, recvport):
 def main():
 	parser = argparse.ArgumentParser("pft_read_ipfix.py",
 	    description="IPFix test tool")
-	parser.add_argument('--recvif', nargs=1,
+	parser.add_argument('--recvif',
 	    required=True,
 	    help='The interface on which to look for packets')
-	parser.add_argument('--port', nargs=1,
+	parser.add_argument('--port', type=int,
 	    required=True,
 	    help='The port number')
+	parser.add_argument('--timeout', type=int,
+	    default=65,
+	    help='Timeout in seconds (0 for infinite)')
+	parser.add_argument('--count', type=int,
+	    default=0,
+	    help='Expected packet count (0 for unknown)')
 
-	args = parser.parse_args()
-
-	receive(args.recvif[0], int(args.port[0]))
+	receive(parser.parse_args())
 
 if __name__ == '__main__':
 	main()

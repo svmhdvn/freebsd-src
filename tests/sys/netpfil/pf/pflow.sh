@@ -114,7 +114,8 @@ state_defaults_body()
 	jexec alcatraz pfctl -Fstates
 
 	atf_check -o match:"No data" \
-	    $(atf_get_srcdir)/pft_read_ipfix.py --recvif ${epair}a --port 2055
+	    $(atf_get_srcdir)/pft_read_ipfix.py \
+	    --recvif ${epair}a --port 2055 --timeout 30
 
 	# Expect pflow output with state-defaults pflow
 	pft_set_rules alcatraz \
@@ -125,7 +126,8 @@ state_defaults_body()
 
 	# We default to version 5
 	atf_check -o match:".*v=5.*" \
-	    $(atf_get_srcdir)/pft_read_ipfix.py --recvif ${epair}a --port 2055
+	    $(atf_get_srcdir)/pft_read_ipfix.py \
+	    --recvif ${epair}a --port 2055 --count 1 --timeout 5
 
 	# Switch to version 10
 	jexec alcatraz pflowctl -s ${pflow} proto 10
@@ -133,7 +135,8 @@ state_defaults_body()
 	ping -c 1 192.0.2.1
 
 	atf_check -o match:".*v=10.*" \
-	    $(atf_get_srcdir)/pft_read_ipfix.py --recvif ${epair}a --port 2055
+	    $(atf_get_srcdir)/pft_read_ipfix.py \
+	    --recvif ${epair}a --port 2055 --count 1 --timeout 5
 }
 
 state_defaults_cleanup()
