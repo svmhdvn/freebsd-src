@@ -38,12 +38,17 @@
 
 #include "freebsd_test_suite/macros.h"
 
+#define NUM_TEST_CASES		11
 #define MAX_FILES		200
-
-static char *files[MAX_FILES];
-static int fds[MAX_FILES];
-
+#define TEMPLATE	"testsfiles.XXXXXXXX"
 #define	TEST_FILE	"/etc/passwd"
+
+struct test_state {
+	char *files[MAX_FILES];
+	int fds[MAX_FILES];
+};
+
+static struct test_state test_states[NUM_TEST_CASES];
 
 static void
 check_capsicum(void)
@@ -52,38 +57,34 @@ check_capsicum(void)
 	ATF_REQUIRE_FEATURE("security_capability_mode");
 }
 
-static void
-prepare_files(size_t num, bool create)
+static void prepare_files(struct test_state *s, bool already_open)
 {
-	const char template[] = "testsfiles.XXXXXXXX";
-	size_t i;
+	for (int i = 0; i < MAX_FILES; i++) {
+  		s->files[i] = calloc(1, sizeof(TEMPLATE));
+  		ATF_REQUIRE(s->files[i] != NULL);
+		strncpy(s->files[i], TEMPLATE, sizeof(TEMPLATE) - 1);
+	}
 
-	for (i = 0; i < num; i++) {
-		files[i] = calloc(1, sizeof(template));
-		ATF_REQUIRE(files[i] != NULL);
-		strncpy(files[i], template, sizeof(template) - 1);
-
-		if (create) {
-			fds[i] = mkstemp(files[i]);
-			ATF_REQUIRE(fds[i] >= 0);
-		} else {
-			fds[i] = -1;
-			ATF_REQUIRE(mktemp(files[i]) != NULL);
+	if (already_open) {
+		for (int i = 0; i < MAX_FILES; i++) {
+			ATF_REQUIRE((s->fds[i] = mkstemp(s->files[i])) != -1);
 		}
+	} else {
+  		for (int i = 0; i < MAX_FILES; i++) {
+			ATF_REQUIRE(mktemp(s->files[i]) != NULL);
+    			s->fds[i] = -1;
+  		}
 	}
 }
 
 static void
-clear_files(void)
+clear_files(struct test_state *s)
 {
-	size_t i;
-
-
-	for (i = 0; files[i] != NULL; i++) {
-		unlink(files[i]);
-		free(files[i]);
-		if (fds[i] != -1)
-			close(fds[i]);
+	for (int i = 0; i < MAX_FILES; i++) {
+		unlink(s->files[i]);
+		free(s->files[i]);
+		if (s->fds[i] != -1)
+			close(s->fds[i]);
 	}
 }
 
@@ -129,7 +130,7 @@ test_file_lstat(fileargs_t *fa, const char *file)
 	if (fileargs_lstat(fa, file, &fasb) < 0)
 		return (errno);
 
-	ATF_REQUIRE(lstat(file, &origsb) == 0);
+	ATF_REQUIRE_INTEQ(0, lstat(file, &origsb));
 
 	equals = true;
 	equals &= (origsb.st_dev == fasb.st_dev);
@@ -218,7 +219,7 @@ test_file_cap(int fd, cap_rights_t *rights)
 {
 	cap_rights_t fdrights;
 
-	ATF_REQUIRE(cap_rights_get(fd, &fdrights) == 0);
+	ATF_REQUIRE_INTEQ(0, cap_rights_get(fd, &fdrights));
 
 	return (cap_rights_contains(&fdrights, rights));
 }
@@ -278,500 +279,507 @@ test_file_fread(FILE *pfile)
 	return (0);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__open_read);
-ATF_TC_HEAD(fileargs__open_read, tc) {}
-ATF_TC_BODY(fileargs__open_read, tc)
+ATF_TC_WITH_CLEANUP(fileargs0__open_read);
+ATF_TC_HEAD(fileargs0__open_read, tc) {}
+ATF_TC_BODY(fileargs0__open_read, tc)
 {
 	cap_rights_t rights, norights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[0];
 	size_t i;
 	int fd;
 
 	check_capsicum();
-
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
 	cap_rights_init(&rights, CAP_READ, CAP_FCNTL);
 	cap_rights_init(&norights, CAP_WRITE);
-	fa = fileargs_init(MAX_FILES, files, O_RDONLY, 0, &rights,
+	fa = fileargs_init(MAX_FILES, s->files, O_RDONLY, 0, &rights,
 	    FA_OPEN);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
 		/* We open file twice to check if we can. */
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, close(fd));
 
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(test_file_mode(fd, O_RDONLY) == 0);
-		ATF_REQUIRE(test_file_cap(fd, &rights) == true);
-		ATF_REQUIRE(test_file_read(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, test_file_mode(fd, O_RDONLY));
+		ATF_REQUIRE(test_file_cap(fd, &rights));
+		ATF_REQUIRE_INTEQ(0, test_file_read(fd));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_open(fa, TEST_FILE, NULL) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_cap(fd, &norights) == false);
-		ATF_REQUIRE(test_file_write(fd) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, TEST_FILE, NULL));
+		ATF_REQUIRE(!test_file_cap(fd, &norights));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_write(fd));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 
 		/* CLOSE */
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, close(fd));
 	}
 }
-ATF_TC_CLEANUP(fileargs__open_read, tc)
+ATF_TC_CLEANUP(fileargs0__open_read, tc)
 {
-	clear_files();
+	clear_files(&test_states[0]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__open_write);
-ATF_TC_HEAD(fileargs__open_write, tc) {}
-ATF_TC_BODY(fileargs__open_write, tc)
+ATF_TC_WITH_CLEANUP(fileargs1__open_write);
+ATF_TC_HEAD(fileargs1__open_write, tc) {}
+ATF_TC_BODY(fileargs1__open_write, tc)
 {
 	cap_rights_t rights, norights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[1];
 	size_t i;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
 	cap_rights_init(&rights, CAP_WRITE, CAP_FCNTL);
 	cap_rights_init(&norights, CAP_READ);
-	fa = fileargs_init(MAX_FILES, files, O_WRONLY, 0, &rights,
+	fa = fileargs_init(MAX_FILES, s->files, O_WRONLY, 0, &rights,
 	    FA_OPEN);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
 		/* We open file twice to check if we can. */
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, close(fd));
 
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(test_file_mode(fd, O_WRONLY) == 0);
-		ATF_REQUIRE(test_file_cap(fd, &rights) == true);
-		ATF_REQUIRE(test_file_write(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, test_file_mode(fd, O_WRONLY));
+		ATF_REQUIRE(test_file_cap(fd, &rights));
+		ATF_REQUIRE_INTEQ(0, test_file_write(fd));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_open(fa, TEST_FILE, NULL) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_cap(fd, &norights) == false);
-		ATF_REQUIRE(test_file_read(fd) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, TEST_FILE, NULL));
+		ATF_REQUIRE(!test_file_cap(fd, &norights));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_read(fd));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 
 		/* CLOSE */
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, close(fd));
 	}
 }
-ATF_TC_CLEANUP(fileargs__open_write, tc)
+ATF_TC_CLEANUP(fileargs1__open_write, tc)
 {
-	clear_files();
+	clear_files(&test_states[1]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__open_create);
-ATF_TC_HEAD(fileargs__open_create, tc) {}
-ATF_TC_BODY(fileargs__open_create, tc)
+ATF_TC_WITH_CLEANUP(fileargs2__open_create);
+ATF_TC_HEAD(fileargs2__open_create, tc) {}
+ATF_TC_BODY(fileargs2__open_create, tc)
 {
 	cap_rights_t rights, norights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[2];
 	size_t i;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, false);
+	prepare_files(s, false);
 
 	cap_rights_init(&rights, CAP_WRITE, CAP_FCNTL, CAP_READ);
 	cap_rights_init(&norights, CAP_FCHMOD);
-	fa = fileargs_init(MAX_FILES, files, O_RDWR | O_CREAT, 666,
+	fa = fileargs_init(MAX_FILES, s->files, O_RDWR | O_CREAT, 666,
 	    &rights, FA_OPEN);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
 
-		ATF_REQUIRE(test_file_mode(fd, O_RDWR) == 0);
-		ATF_REQUIRE(test_file_cap(fd, &rights) == true);
-		ATF_REQUIRE(test_file_write(fd) == 0);
-		ATF_REQUIRE(test_file_read(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_mode(fd, O_RDWR));
+		ATF_REQUIRE(test_file_cap(fd, &rights));
+		ATF_REQUIRE_INTEQ(0, test_file_write(fd));
+		ATF_REQUIRE_INTEQ(0, test_file_read(fd));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_open(fa, TEST_FILE, NULL) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_cap(fd, &norights) == false);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, TEST_FILE, NULL));
+		ATF_REQUIRE(!test_file_cap(fd, &norights));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 
 		/* CLOSE */
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, close(fd));
 	}
 }
-ATF_TC_CLEANUP(fileargs__open_create, tc)
+ATF_TC_CLEANUP(fileargs2__open_create, tc)
 {
-	clear_files();
+	clear_files(&test_states[2]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__open_with_casper);
-ATF_TC_HEAD(fileargs__open_with_casper, tc) {}
-ATF_TC_BODY(fileargs__open_with_casper, tc)
+ATF_TC_WITH_CLEANUP(fileargs3__open_with_casper);
+ATF_TC_HEAD(fileargs3__open_with_casper, tc) {}
+ATF_TC_BODY(fileargs3__open_with_casper, tc)
 {
 	cap_channel_t *capcas;
 	cap_rights_t rights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[3];
 	size_t i;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
 	capcas = cap_init();
 	ATF_REQUIRE(capcas != NULL);
 
 	cap_rights_init(&rights, CAP_READ);
-	fa = fileargs_cinit(capcas, MAX_FILES, files, O_RDONLY, 0, &rights,
+	fa = fileargs_cinit(capcas, MAX_FILES, s->files, O_RDONLY, 0, &rights,
 	    FA_OPEN);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(test_file_read(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, test_file_read(fd));
 
 		/* CLOSE */
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, close(fd));
 	}
 }
-ATF_TC_CLEANUP(fileargs__open_with_casper, tc)
+ATF_TC_CLEANUP(fileargs3__open_with_casper, tc)
 {
-	clear_files();
+	clear_files(&test_states[3]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__fopen_read);
-ATF_TC_HEAD(fileargs__fopen_read, tc) {}
-ATF_TC_BODY(fileargs__fopen_read, tc)
+ATF_TC_WITH_CLEANUP(fileargs4__fopen_read);
+ATF_TC_HEAD(fileargs4__fopen_read, tc) {}
+ATF_TC_BODY(fileargs4__fopen_read, tc)
 {
 	cap_rights_t rights, norights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[4];
 	size_t i;
 	FILE *pfile;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
 	cap_rights_init(&rights, CAP_READ, CAP_FCNTL);
 	cap_rights_init(&norights, CAP_WRITE);
-	fa = fileargs_init(MAX_FILES, files, O_RDONLY, 0, &rights,
+	fa = fileargs_init(MAX_FILES, s->files, O_RDONLY, 0, &rights,
 	    FA_OPEN);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
 		/* We fopen file twice to check if we can. */
-		ATF_REQUIRE(test_file_fopen(fa, files[i], "r", &pfile) == 0);
-		ATF_REQUIRE(fclose(pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_fopen(fa, s->files[i], "r", &pfile));
+		ATF_REQUIRE_INTEQ(0, fclose(pfile));
 
-		ATF_REQUIRE(test_file_fopen(fa, files[i], "r", &pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_fopen(fa, s->files[i], "r", &pfile));
 		fd = fileno(pfile);
-		ATF_REQUIRE(test_file_mode(fd, O_RDONLY) == 0);
-		ATF_REQUIRE(test_file_cap(fd, &rights) == true);
-		ATF_REQUIRE(test_file_fread(pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_mode(fd, O_RDONLY));
+		ATF_REQUIRE(test_file_cap(fd, &rights));
+		ATF_REQUIRE_INTEQ(0, test_file_fread(pfile));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_fopen(fa, TEST_FILE, "r", NULL) ==
-		    ENOTCAPABLE);
-		ATF_REQUIRE(test_file_cap(fd, &norights) == false);
-		ATF_REQUIRE(test_file_fwrite(pfile) == EBADF);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_fopen(fa, TEST_FILE, "r", NULL));
+		ATF_REQUIRE(!test_file_cap(fd, &norights));
+		ATF_REQUIRE_INTEQ(EBADF, test_file_fwrite(pfile));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 
 		/* CLOSE */
-		ATF_REQUIRE(fclose(pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, fclose(pfile));
 	}
 }
-ATF_TC_CLEANUP(fileargs__fopen_read, tc)
+ATF_TC_CLEANUP(fileargs4__fopen_read, tc)
 {
-	clear_files();
+	clear_files(&test_states[4]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__fopen_write);
-ATF_TC_HEAD(fileargs__fopen_write, tc) {}
-ATF_TC_BODY(fileargs__fopen_write, tc)
+ATF_TC_WITH_CLEANUP(fileargs5__fopen_write);
+ATF_TC_HEAD(fileargs5__fopen_write, tc) {}
+ATF_TC_BODY(fileargs5__fopen_write, tc)
 {
 	cap_rights_t rights, norights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[5];
 	size_t i;
 	FILE *pfile;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
 	cap_rights_init(&rights, CAP_WRITE, CAP_FCNTL);
 	cap_rights_init(&norights, CAP_READ);
-	fa = fileargs_init(MAX_FILES, files, O_WRONLY, 0, &rights,
+	fa = fileargs_init(MAX_FILES, s->files, O_WRONLY, 0, &rights,
 	    FA_OPEN);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
 		/* We fopen file twice to check if we can. */
-		ATF_REQUIRE(test_file_fopen(fa, files[i], "w", &pfile) == 0);
-		ATF_REQUIRE(fclose(pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_fopen(fa, s->files[i], "w", &pfile));
+		ATF_REQUIRE_INTEQ(0, fclose(pfile));
 
-		ATF_REQUIRE(test_file_fopen(fa, files[i], "w", &pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_fopen(fa, s->files[i], "w", &pfile));
 		fd = fileno(pfile);
-		ATF_REQUIRE(test_file_mode(fd, O_WRONLY) == 0);
-		ATF_REQUIRE(test_file_cap(fd, &rights) == true);
-		ATF_REQUIRE(test_file_fwrite(pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_mode(fd, O_WRONLY));
+		ATF_REQUIRE(test_file_cap(fd, &rights));
+		ATF_REQUIRE_INTEQ(0, test_file_fwrite(pfile));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, s->files[i]));
 		ATF_REQUIRE(test_file_fopen(fa, TEST_FILE, "w", NULL) ==
 		    ENOTCAPABLE);
-		ATF_REQUIRE(test_file_cap(fd, &norights) == false);
-		ATF_REQUIRE(test_file_fread(pfile) == EBADF);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE(!test_file_cap(fd, &norights));
+		ATF_REQUIRE_INTEQ(EBADF, test_file_fread(pfile));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 
 		/* CLOSE */
-		ATF_REQUIRE(fclose(pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, fclose(pfile));
 	}
 }
-ATF_TC_CLEANUP(fileargs__fopen_write, tc)
+ATF_TC_CLEANUP(fileargs5__fopen_write, tc)
 {
-	clear_files();
+	clear_files(&test_states[5]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__fopen_create);
-ATF_TC_HEAD(fileargs__fopen_create, tc) {}
-ATF_TC_BODY(fileargs__fopen_create, tc)
+ATF_TC_WITH_CLEANUP(fileargs6__fopen_create);
+ATF_TC_HEAD(fileargs6__fopen_create, tc) {}
+ATF_TC_BODY(fileargs6__fopen_create, tc)
 {
 	cap_rights_t rights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[6];
 	size_t i;
 	FILE *pfile;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, false);
+	prepare_files(s, false);
 
 	cap_rights_init(&rights, CAP_READ, CAP_WRITE, CAP_FCNTL);
-	fa = fileargs_init(MAX_FILES, files, O_RDWR | O_CREAT, 0, &rights,
+	fa = fileargs_init(MAX_FILES, s->files, O_RDWR | O_CREAT, 0, &rights,
 	    FA_OPEN);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
 		/* We fopen file twice to check if we can. */
-		ATF_REQUIRE(test_file_fopen(fa, files[i], "w+", &pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_fopen(fa, s->files[i], "w+", &pfile));
 		fd = fileno(pfile);
-		ATF_REQUIRE(test_file_mode(fd, O_RDWR) == 0);
-		ATF_REQUIRE(test_file_cap(fd, &rights) == true);
-		ATF_REQUIRE(test_file_fwrite(pfile) == 0);
-		ATF_REQUIRE(test_file_fread(pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_mode(fd, O_RDWR));
+		ATF_REQUIRE(test_file_cap(fd, &rights));
+		ATF_REQUIRE_INTEQ(0, test_file_fwrite(pfile));
+		ATF_REQUIRE_INTEQ(0, test_file_fread(pfile));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_fopen(fa, TEST_FILE, "w+", NULL) ==
-		    ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_fopen(fa, TEST_FILE, "w+", NULL));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 
 		/* CLOSE */
-		ATF_REQUIRE(fclose(pfile) == 0);
+		ATF_REQUIRE_INTEQ(0, fclose(pfile));
 	}
 }
-ATF_TC_CLEANUP(fileargs__fopen_create, tc)
+ATF_TC_CLEANUP(fileargs6__fopen_create, tc)
 {
-	clear_files();
+	clear_files(&test_states[6]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__lstat);
-ATF_TC_HEAD(fileargs__lstat, tc) {}
-ATF_TC_BODY(fileargs__lstat, tc)
+ATF_TC_WITH_CLEANUP(fileargs7__lstat);
+ATF_TC_HEAD(fileargs7__lstat, tc) {}
+ATF_TC_BODY(fileargs7__lstat, tc)
 {
 	fileargs_t *fa;
+	struct test_state *s = &test_states[7];
 	size_t i;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
-	fa = fileargs_init(MAX_FILES, files, 0, 0, NULL, FA_LSTAT);
+	fa = fileargs_init(MAX_FILES, s->files, 0, 0, NULL, FA_LSTAT);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_lstat(fa, s->files[i]));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_lstat(fa, TEST_FILE) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_open(fa, TEST_FILE, &fd) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, TEST_FILE));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, TEST_FILE, &fd));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 	}
 }
-ATF_TC_CLEANUP(fileargs__lstat, tc)
+ATF_TC_CLEANUP(fileargs7__lstat, tc)
 {
-	clear_files();
+	clear_files(&test_states[7]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__realpath);
-ATF_TC_HEAD(fileargs__realpath, tc) {}
-ATF_TC_BODY(fileargs__realpath, tc)
+ATF_TC_WITH_CLEANUP(fileargs8__realpath);
+ATF_TC_HEAD(fileargs8__realpath, tc) {}
+ATF_TC_BODY(fileargs8__realpath, tc)
 {
 	fileargs_t *fa;
+	struct test_state *s = &test_states[8];
 	size_t i;
 	int fd;
 
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
-	fa = fileargs_init(MAX_FILES, files, 0, 0, NULL, FA_REALPATH);
+	fa = fileargs_init(MAX_FILES, s->files, 0, 0, NULL, FA_REALPATH);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_realpath(fa, s->files[i]));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_lstat(fa, TEST_FILE) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_open(fa, TEST_FILE, &fd) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, TEST_FILE));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, TEST_FILE, &fd));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 	}
 }
-ATF_TC_CLEANUP(fileargs__realpath, tc)
+ATF_TC_CLEANUP(fileargs8__realpath, tc)
 {
-	clear_files();
+	clear_files(&test_states[8]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__open_lstat);
-ATF_TC_HEAD(fileargs__open_lstat, tc) {}
-ATF_TC_BODY(fileargs__open_lstat, tc)
+ATF_TC_WITH_CLEANUP(fileargs9__open_lstat);
+ATF_TC_HEAD(fileargs9__open_lstat, tc) {}
+ATF_TC_BODY(fileargs9__open_lstat, tc)
 {
 	cap_rights_t rights, norights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[9];
 	size_t i;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
 	cap_rights_init(&rights, CAP_READ, CAP_FCNTL);
 	cap_rights_init(&norights, CAP_WRITE);
-	fa = fileargs_init(MAX_FILES, files, O_RDONLY, 0, &rights,
+	fa = fileargs_init(MAX_FILES, s->files, O_RDONLY, 0, &rights,
 	    FA_OPEN | FA_LSTAT);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
 		/* We open file twice to check if we can. */
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == 0);
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_lstat(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, close(fd));
 
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == 0);
-		ATF_REQUIRE(test_file_mode(fd, O_RDONLY) == 0);
-		ATF_REQUIRE(test_file_cap(fd, &rights) == true);
-		ATF_REQUIRE(test_file_read(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, test_file_lstat(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(0, test_file_mode(fd, O_RDONLY));
+		ATF_REQUIRE(test_file_cap(fd, &rights));
+		ATF_REQUIRE_INTEQ(0, test_file_read(fd));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_open(fa, TEST_FILE, NULL) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_cap(fd, &norights) == false);
-		ATF_REQUIRE(test_file_write(fd) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_realpath(fa, TEST_FILE) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, TEST_FILE, NULL));
+		ATF_REQUIRE(!test_file_cap(fd, &norights));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_write(fd));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_realpath(fa, TEST_FILE));
 
 		/* CLOSE */
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, close(fd));
 	}
 }
-ATF_TC_CLEANUP(fileargs__open_lstat, tc)
+ATF_TC_CLEANUP(fileargs9__open_lstat, tc)
 {
-	clear_files();
+	clear_files(&test_states[9]);
 }
 
-ATF_TC_WITH_CLEANUP(fileargs__open_realpath);
-ATF_TC_HEAD(fileargs__open_realpath, tc) {}
-ATF_TC_BODY(fileargs__open_realpath, tc)
+ATF_TC_WITH_CLEANUP(fileargs10__open_realpath);
+ATF_TC_HEAD(fileargs10__open_realpath, tc) {}
+ATF_TC_BODY(fileargs10__open_realpath, tc)
 {
 	cap_rights_t rights, norights;
 	fileargs_t *fa;
+	struct test_state *s = &test_states[10];
 	size_t i;
 	int fd;
 
 	check_capsicum();
 
-	prepare_files(MAX_FILES, true);
+	prepare_files(s, true);
 
 	cap_rights_init(&rights, CAP_READ, CAP_FCNTL);
 	cap_rights_init(&norights, CAP_WRITE);
-	fa = fileargs_init(MAX_FILES, files, O_RDONLY, 0, &rights,
+	fa = fileargs_init(MAX_FILES, s->files, O_RDONLY, 0, &rights,
 	    FA_OPEN | FA_REALPATH);
 	ATF_REQUIRE(fa != NULL);
 
 	for (i = 0; i < MAX_FILES; i++) {
 		/* ALLOWED */
 		/* We open file twice to check if we can. */
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == 0);
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, close(fd));
 
-		ATF_REQUIRE(test_file_open(fa, files[i], &fd) == 0);
-		ATF_REQUIRE(test_file_realpath(fa, files[i]) == 0);
-		ATF_REQUIRE(test_file_mode(fd, O_RDONLY) == 0);
-		ATF_REQUIRE(test_file_cap(fd, &rights) == true);
-		ATF_REQUIRE(test_file_read(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, test_file_open(fa, s->files[i], &fd));
+		ATF_REQUIRE_INTEQ(0, test_file_realpath(fa, s->files[i]));
+		ATF_REQUIRE_INTEQ(0, test_file_mode(fd, O_RDONLY));
+		ATF_REQUIRE(test_file_cap(fd, &rights));
+		ATF_REQUIRE_INTEQ(0, test_file_read(fd));
 
 		/* DISALLOWED */
-		ATF_REQUIRE(test_file_open(fa, TEST_FILE, NULL) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_cap(fd, &norights) == false);
-		ATF_REQUIRE(test_file_write(fd) == ENOTCAPABLE);
-		ATF_REQUIRE(test_file_lstat(fa, files[i]) == ENOTCAPABLE);
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_open(fa, TEST_FILE, NULL));
+		ATF_REQUIRE(!test_file_cap(fd, &norights));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_write(fd));
+		ATF_REQUIRE_INTEQ(ENOTCAPABLE, test_file_lstat(fa, s->files[i]));
 
 		/* CLOSE */
-		ATF_REQUIRE(close(fd) == 0);
+		ATF_REQUIRE_INTEQ(0, close(fd));
 	}
 }
-ATF_TC_CLEANUP(fileargs__open_realpath, tc)
+ATF_TC_CLEANUP(fileargs10__open_realpath, tc)
 {
-	clear_files();
+	clear_files(&test_states[10]);
 }
 
 ATF_TP_ADD_TCS(tp)
 {
+	ATF_TP_ADD_TC(tp, fileargs0__open_read);
+	ATF_TP_ADD_TC(tp, fileargs1__open_write);
+	ATF_TP_ADD_TC(tp, fileargs2__open_create);
+	ATF_TP_ADD_TC(tp, fileargs3__open_with_casper);
 
-	ATF_TP_ADD_TC(tp, fileargs__open_create);
-	ATF_TP_ADD_TC(tp, fileargs__open_read);
-	ATF_TP_ADD_TC(tp, fileargs__open_write);
-	ATF_TP_ADD_TC(tp, fileargs__open_with_casper);
+	ATF_TP_ADD_TC(tp, fileargs4__fopen_read);
+	ATF_TP_ADD_TC(tp, fileargs5__fopen_write);
+	ATF_TP_ADD_TC(tp, fileargs6__fopen_create);
 
-	ATF_TP_ADD_TC(tp, fileargs__fopen_create);
-	ATF_TP_ADD_TC(tp, fileargs__fopen_read);
-	ATF_TP_ADD_TC(tp, fileargs__fopen_write);
+	ATF_TP_ADD_TC(tp, fileargs7__lstat);
 
-	ATF_TP_ADD_TC(tp, fileargs__lstat);
+	ATF_TP_ADD_TC(tp, fileargs8__realpath);
 
-	ATF_TP_ADD_TC(tp, fileargs__realpath);
-
-	ATF_TP_ADD_TC(tp, fileargs__open_lstat);
-	ATF_TP_ADD_TC(tp, fileargs__open_realpath);
+	ATF_TP_ADD_TC(tp, fileargs9__open_lstat);
+	ATF_TP_ADD_TC(tp, fileargs10__open_realpath);
 
 	return (atf_no_error());
 }
