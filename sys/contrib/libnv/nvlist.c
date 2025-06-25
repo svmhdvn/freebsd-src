@@ -1278,15 +1278,26 @@ nvlist_recv(int sock, int flags)
 	socklen_t solen;
 
 	solen = sizeof(sotype);
-	if (getsockopt(sock, SOL_SOCKET, SO_TYPE, &sotype, &solen) != 0)
+	if (getsockopt(sock, SOL_SOCKET, SO_TYPE, &sotype, &solen) != 0) {
 		return (NULL);
+	}
 
 	soflags = sotype == SOCK_DGRAM ? MSG_PEEK : 0;
-	if (buf_recv(sock, &nvlhdr, sizeof(nvlhdr), soflags) == -1)
+	if (buf_recv(sock, &nvlhdr, sizeof(nvlhdr), soflags) == -1) {
 		return (NULL);
+	}
 
-	if (!nvlist_check_header(&nvlhdr))
+	if (!nvlist_check_header(&nvlhdr)) {
 		return (NULL);
+	}
+	fprintf(stderr,
+		"nvlist_recv SIVA 2: nvlhdr:\n  magic=%u\n  version=%u\n  flags=%u\n  descriptors=%lu\n  size=%lu\n",
+		nvlhdr.nvlh_magic,
+		nvlhdr.nvlh_version,
+		nvlhdr.nvlh_flags,
+		nvlhdr.nvlh_descriptors,
+		nvlhdr.nvlh_size
+	);
 
 	nfds = (size_t)nvlhdr.nvlh_descriptors;
 	size = sizeof(nvlhdr) + (size_t)nvlhdr.nvlh_size;
@@ -1305,15 +1316,18 @@ nvlist_recv(int sock, int flags)
 		offset = sizeof(nvlhdr);
 	}
 
-	if (buf_recv(sock, buf + offset, size - offset, 0) == -1)
+	if (buf_recv(sock, buf + offset, size - offset, 0) == -1) {
 		goto out;
+	}
 
 	if (nfds > 0) {
 		fds = nv_calloc(nfds, sizeof(fds[0]));
 		if (fds == NULL)
 			goto out;
-		if (fd_recv(sock, fds, nfds) == -1)
+		if (fd_recv(sock, fds, nfds) == -1) {
+			fprintf(stderr, "nvlist_recv SIVA 7: errno: %d\n", errno);
 			goto out;
+		}
 	}
 
 	nvl = nvlist_xunpack(buf, size, fds, nfds, flags);

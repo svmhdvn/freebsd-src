@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #ifdef HAVE_PJDLOG
 #include <pjdlog.h>
@@ -300,11 +301,13 @@ fd_package_recv(int sock, int *fds, size_t nfds)
 
 	ret = -1;
 
-	if (msg_recv(sock, &msg) == -1)
+	if (msg_recv(sock, &msg) == -1) {
 		goto end;
+	}
 
 	i = 0;
 	cmsg = CMSG_FIRSTHDR(&msg);
+	fprintf(stderr, "    fd_package_recv SIVA 1: cmsg: %p\ti: %d\terrno: %d\n", cmsg, i, errno);
 	while (cmsg && i < nfds) {
 		unsigned int n;
 
@@ -315,6 +318,7 @@ fd_package_recv(int sock, int *fds, size_t nfds)
 		}
 		n = (cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int);
 		if (i + n > nfds) {
+			fprintf(stderr, "    fd_package_recv SIVA 2: n: %u\ti: %u\terrno: %d\n", n, i, errno);
 			errno = EINVAL;
 			break;
 		}
@@ -324,6 +328,7 @@ fd_package_recv(int sock, int *fds, size_t nfds)
 	}
 
 	if (cmsg != NULL || i < nfds) {
+		fprintf(stderr, "    fd_package_recv SIVA 3: cmsg: %p\ti: %d\terrno: %d\n", cmsg, i, errno);
 		unsigned int last;
 
 		/*
@@ -337,6 +342,7 @@ fd_package_recv(int sock, int *fds, size_t nfds)
 			}
 		}
 		errno = EINVAL;
+		fprintf(stderr, "    fd_package_recv SIVA 4: nfds: %zu\tret: %d\terrno: %d\n", nfds, ret, errno);
 		goto end;
 	}
 
@@ -377,6 +383,7 @@ fd_recv(int sock, int *fds, size_t nfds)
 		else
 			step = nfds - i;
 		ret = fd_package_recv(sock, fds + i, step);
+		fprintf(stderr, "  fd_recv SIVA 2: nfds: %zu\ti: %d\tstep: %d\tret: %d\terrno: %d\n", nfds, i, step, ret, errno);
 		if (ret != 0) {
 			/* Close all received descriptors. */
 			serrno = errno;

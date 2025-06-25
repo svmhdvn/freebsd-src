@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <libcasper.h>
 #include <libcasper_service.h>
@@ -321,7 +322,7 @@ fileargs_open(fileargs_t *fa, const char *name)
 	assert(fa->fa_magic == FILEARGS_MAGIC);
 
 	if (name == NULL) {
-		errno = EINVAL;
+		errno = EDOOFUS;
 		return (-1);
 	}
 
@@ -334,7 +335,9 @@ fileargs_open(fileargs_t *fa, const char *name)
 	if (fd != -1)
 		return (fd);
 
+	fprintf(stderr, "SIVA START DEBUG: fd: %d\terrno: %d\n", fd, errno);
 	nvl = fileargs_fetch(fa, name, "open");
+	fprintf(stderr, "SIVA END DEBUG: fd: %d\terrno: %d\n", fd, errno);
 	if (nvl == NULL)
 		return (-1);
 
