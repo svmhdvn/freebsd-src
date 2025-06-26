@@ -361,7 +361,7 @@ atf_require_prog()
 #
 atf_require_kmod()
 {
-    kldstat -q "${1}" || \
+    kldstat -qm "${1}" || \
         atf_skip "The required kmod ${1} is not loaded"
 }
 
