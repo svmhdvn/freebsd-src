@@ -570,18 +570,18 @@ class TestRtNlIfaddrOpsP2p(RtnlIfaOps):
             pytest.param(
                 ["2001:db8::1/64", "2001:db8::2"],
                 id="dst_inside_64",
-                marks=pytest.mark.xfail(reason="currently fails"),
+                #marks=pytest.mark.xfail(reason="currently fails"),
             ),
             pytest.param(
                 ["2001:db8::1/127", "2001:db8::2"],
                 id="dst_inside_127",
-                marks=pytest.mark.xfail(reason="currently fails"),
+                #marks=pytest.mark.xfail(reason="currently fails"),
             ),
             pytest.param(["2001:db8::1/128", "2001:db8::2"], id="dst_outside_128"),
             pytest.param(
                 ["2001:db8::1/64", "2001:db8:2::2"],
                 id="dst_outside_64",
-                marks=pytest.mark.xfail(reason="currently fails"),
+                #marks=pytest.mark.xfail(reason="currently fails"),
             ),
         ],
     )
