@@ -72,6 +72,7 @@ FORMAT=		raw
 CIIMAGE=	ci-${OSRELEASE}-${GITREV}-${KERNCONF}.${FORMAT}
 CIDISK?=	${.OBJDIR}/${CIIMAGE}
 VMSIZE?=	6g
+KYUA_TEST_FILTERS?=
 CITYPE?=	full
 META_TAR!=mktemp /tmp/meta.XXXXXX
 META_DIR!=mktemp -d /tmp/meta.XXXXXX
