@@ -28,6 +28,7 @@ TOTAL_MEMORY!=expr ${_MEMORY} / 1073741824
 KERNCONF?=	GENERIC
 LOCALBASE?=	/usr/local
 EXTRA_MAKE_FLAGS?=
+SU_CMD?=	/usr/bin/su root -c
 
 .if !defined(TARGET) || empty(TARGET)
 TARGET=		${MACHINE}
@@ -73,16 +74,17 @@ CIIMAGE=	ci-${OSRELEASE}-${GITREV}-${KERNCONF}.${FORMAT}
 CIDISK?=	${.OBJDIR}/${CIIMAGE}
 VMSIZE?=	6g
 CITYPE?=	full
-META_TAR!=mktemp /tmp/meta.XXXXXX
-META_DIR!=mktemp -d /tmp/meta.XXXXXX
-META_DIROUT!=mktemp -d /tmp/meta.XXXXXX
-DISC_CAM!=truncate -s 128m /tmp/disk-cam
+KYUA_TEST_FILTERS?=
+.if !defined(META_TAR)
+META_TAR!=	mktemp /tmp/freebsdci_report.tar.XXXXXX
+META_DIR!=	mktemp -d /tmp/freebsdci_meta.XXXXXX
+META_DIROUT!=	mktemp -d /tmp/freebsdci_report.XXXXXX
+.endif
 EXTRA_DISK_NUM?=5
 DISK_NUMBERS!=jot - 1 ${EXTRA_DISK_NUM}
 BHYVE_EXTRA_DISK_PARAM?=
 BHYVE_EXTRA_DISK_PARAM+=-s 4:0,ahci-hd,/tmp/disk-cam
 .for i in ${DISK_NUMBERS}
-NEW_DISK!=truncate -s 128m /tmp/disk${i}
 BHYVE_EXTRA_DISK_PARAM+=-s $$((${i} + 4)):0,virtio-blk,/tmp/disk${i}
 CLEANFILES+=/tmp/disk${i}
 .endfor
@@ -137,7 +139,7 @@ CLEANFILES+=	${.OBJDIR}/${CIIMAGE} ${.OBJDIR}/ci.img ${META_TAR}
 IMAGEDIR=	${.OBJDIR}/ci-buildimage
 CLEANDIRS+=	${IMAGEDIR}
 
-portinstall: portinstall-pkg portinstall-qemu portinstall-expect portinstall-${TARGET_ARCH:tl} .PHONY
+portinstall: portinstall-qemu portinstall-expect portinstall-${TARGET_ARCH:tl} .PHONY
 
 portinstall-pkg: .PHONY
 .if !exists(/usr/local/sbin/pkg-static)
@@ -172,8 +174,7 @@ ci-buildworld: .PHONY
 		${EXTRA_MAKE_FLAGS} buildworld > ${.CURDIR}/_.${TARGET_ARCH}.${.TARGET} 2>&1 || \
 		(echo "${.TARGET} failed, check _.${TARGET_ARCH}.${.TARGET} for details" ; false)
 
-
-ci-buildkernel: ci-buildworld-${TARGET_ARCH:tl} .PHONY
+ci-buildkernel: .PHONY
 	@echo "Building kernel for ${TARGET_ARCH}"
 	${IMAKE} -j${PARALLEL_JOBS} -C ${WORLDDIR} ${METAMODE} \
 		${CROSS_TOOLCHAIN_PARAM} __MAKE_CONF=${MAKECONF} SRCCONF=${SRCCONF} \
@@ -181,7 +182,7 @@ ci-buildkernel: ci-buildworld-${TARGET_ARCH:tl} .PHONY
 		buildkernel > ${.CURDIR}/_.${TARGET_ARCH}.${.TARGET} 2>&1 || \
 		(echo "${.TARGET} failed, check _.${TARGET_ARCH}.${.TARGET} for details" ; false)
 
-ci-buildimage: ${QEMUTGT} ci-buildkernel-${TARGET_ARCH:tl} .PHONY
+ci-buildimage: ${QEMUTGT} .PHONY
 	@echo "Building ci image for ${TARGET_ARCH}"
 	mkdir -p ${.OBJDIR}/${.TARGET}
 	env TARGET=${TARGET} TARGET_ARCH=${TARGET_ARCH} SWAPSIZE=${SWAPSIZE} \
@@ -206,11 +207,20 @@ ci-create-meta: .PHONY
 
 ci-extract-meta: .PHONY
 	tar xfv ${META_TAR} -C ${META_DIROUT}
+	rm -rf ${META_TAR} ${META_DIR}
 	@echo "Extracted kyua reports to ${META_DIROUT}"
+
+ci-run-escalated: .PHONY
+	echo "===>  Switching to root credentials to run privilege escalated CI tasks."
+	${SU_CMD} "${IMAKE} -C ${.CURDIR} META_TAR=${META_TAR} META_DIR=${META_DIR} META_DIROUT=${META_DIROUT} ci-runtest-${TARGET_ARCH}"
+	echo "===>  Returning to user credentials."
 
 ci-runtest: ci-buildimage-${TARGET_ARCH:tl} portinstall .PHONY
 .if ${MACHINE} == "amd64" && ( ${TARGET_ARCH} == "amd64" || ${TARGET_ARCH} == "i386" ) && ( !defined(USE_QEMU) || empty(USE_QEMU) )
 	/usr/sbin/bhyvectl --vm=${TEST_VM_NAME} --destroy || true
+.for i in ${DISK_NUMBERS} -cam
+	truncate -s 128m /tmp/disk${i}
+.endfor
 	expect -c "set timeout ${TIMEOUT_EXPECT}; \
 		spawn /usr/bin/timeout -k 5s 30s /usr/sbin/bhyveload \
 		-c stdio -m ${VM_MEM_SIZE} -d ${CIDISK} ${TEST_VM_NAME}; \
@@ -253,10 +263,10 @@ ci-checktarget: .PHONY
 	@echo "Error: ${TARGET_ARCH} is not supported on ${TYPE} ${REVISION} ${BRANCH}"
 .endif
 
-ci-smoke: ci-set-smoke-var ci-create-meta ci-checktarget .WAIT ci-runtest-${TARGET_ARCH:tl} .PHONY
+ci-smoke: ci-set-smoke-var ci-create-meta ci-checktarget .WAIT ci-run-escalated .PHONY
 
-ci-full: ci-set-full-var ci-create-meta ci-checktarget .WAIT ci-runtest-${TARGET_ARCH:tl} ci-extract-meta .PHONY
+ci-full: ci-set-full-var ci-create-meta ci-checktarget .WAIT ci-run-escalated .WAIT ci-extract-meta .PHONY
 
-ci: ci-${CITYPE:tl} .PHONY
+ci: ci-buildworld-${TARGET_ARCH:tl} ci-buildkernel-${TARGET_ARCH:tl} ci-${CITYPE:tl} .PHONY
 
 .include "${RELEASEDIR}/Makefile.inc1"
