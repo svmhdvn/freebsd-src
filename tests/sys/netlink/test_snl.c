@@ -61,10 +61,8 @@ ATF_TC_BODY(snl_parse_errmsg_capped, tc)
 	struct snl_state ss;
 	struct snl_writer nw;
 
-	if (!snl_init(&ss, NETLINK_ROUTE))
-		atf_tc_fail("snl_init() failed");
-
-	atf_tc_skip("does not work");
+	ATF_CHECK(snl_init(&ss, NETLINK_ROUTE));
+	atf_tc_expect_fail("https://bugs.freebsd.org/289684");
 
 	int optval = 1;
 	ATF_CHECK(setsockopt(ss.fd, SOL_NETLINK, NETLINK_CAP_ACK, &optval, sizeof(optval)) == 0);
