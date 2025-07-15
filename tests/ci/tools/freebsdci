@@ -78,9 +78,7 @@ full_tests()
 		tar xvf ${tardev} -C ${metadir}
 		cd /usr/tests
 		set +e
-		kyua \
-			-v parallelism=${parallelism} \
-			test ${freebsdci_test_filters}
+		xargs kyua -v parallelism=${parallelism} test < ${metadir}/kyua_filters.txt
 		rc=$?
 		set -e
 		if [ ${rc} -ne 0 ] && [ ${rc} -ne 1 ]; then
