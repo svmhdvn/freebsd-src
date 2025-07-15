@@ -373,7 +373,7 @@ atf_test_case "4in6" "cleanup"
 		auth-user-pass-verify /usr/bin/true via-env
 		topology subnet
 
-		keepalive 100 600
+		keepalive 10 60
 	"
 	ovpn_start b "
 		dev tun0
@@ -381,15 +381,17 @@ atf_test_case "4in6" "cleanup"
 
 		client
 
+		cipher AES-256-GCM
+		auth SHA256
+
 		remote 2001:db8::1
 		auth-user-pass $(atf_get_srcdir)/user.pass
 
 		ca $(atf_get_srcdir)/ca.crt
 		cert $(atf_get_srcdir)/client.crt
 		key $(atf_get_srcdir)/client.key
-		dh $(atf_get_srcdir)/dh.pem
 
-		keepalive 100 600
+		keepalive 10 60
 	"
 
 	dd if=/dev/random of=test.img bs=1024 count=1024
