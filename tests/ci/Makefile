@@ -187,7 +187,7 @@ ci-buildimage: ${QEMUTGT} ci-buildkernel-${TARGET_ARCH:tl} .PHONY
 	@echo "Building ci image for ${TARGET_ARCH}"
 	mkdir -p ${.OBJDIR}/${.TARGET}
 	env TARGET=${TARGET} TARGET_ARCH=${TARGET_ARCH} SWAPSIZE=${SWAPSIZE} \
-		QEMUSTATIC=${QEMUSTATIC} CITYPE=${CITYPE} \
+		QEMUSTATIC=${QEMUSTATIC} CITYPE=${CITYPE} NOPKGBASE=1 \
 		${RELEASEDIR}/scripts/mk-vmimage.sh \
 		-C ${RELEASEDIR}/tools/vmimage.subr -d ${.OBJDIR}/${.TARGET} -F ${VMFS} \
 		-i ${.OBJDIR}/ci.img -s ${VMSIZE} -f ${FORMAT} \
