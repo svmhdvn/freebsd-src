@@ -31,7 +31,6 @@ rcvar=freebsdci_enable
 start_cmd="firstboot_ci_run"
 stop_cmd=":"
 os_arch=$(uname -p)
-parallelism=$(nproc)
 metadir=/meta
 
 load_rc_config $name
@@ -90,7 +89,7 @@ full_tests()
 	echo "TEST sequence STARTED"
 	cd ${metadir}
 	set +e
-	xargs kyua -v parallelism=${parallelism} test -k /usr/tests/Kyuafile -r kyua-results.db < kyua_test_filters.txt
+	xargs kyua test -k /usr/tests/Kyuafile -r kyua-results.db < kyua_test_filters.txt
 	rc=$?
 	set -e
 	if [ ${rc} -ne 0 ] && [ ${rc} -ne 1 ]; then
