@@ -51,7 +51,7 @@ class TestIfOps(VnetTestTemplate):
         "family",
         [
             "inet",
-            pytest.param("inet6", marks=pytest.mark.xfail(reason="currently fails")),
+            "inet6",
         ],
     )
     @pytest.mark.require_user("root")
