@@ -59,10 +59,6 @@ normal_body()
 {
 	dhcpd=$(which dhcpd)
 
-	if ! [ -x "$dhcpd" ]; then
-		atf_skip "ISC dhcp server (isc-dhcp44-server) not installed"
-	fi
-
 	vnet_init
 
 	epair=$(vnet_mkepair)
@@ -112,10 +108,6 @@ pcp_head()
 pcp_body()
 {
 	dhcpd=$(which dhcpd)
-
-	if ! [ -x "$dhcpd" ]; then
-		atf_skip "ISC dhcp server (isc-dhcp44-server) not installed"
-	fi
 
 	vnet_init
 
