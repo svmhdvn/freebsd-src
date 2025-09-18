@@ -159,6 +159,7 @@ class TestAddRule(BaseTest):
                     },
                 },
                 id="test_tables",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
             pytest.param(
                 {
@@ -188,6 +189,7 @@ class TestAddRule(BaseTest):
                     },
                 },
                 id="test_eaction_tcp-setmss",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
             pytest.param(
                 {
@@ -205,6 +207,7 @@ class TestAddRule(BaseTest):
                     },
                 },
                 id="test_eaction_ntp",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
             pytest.param(
                 {
@@ -232,6 +235,7 @@ class TestAddRule(BaseTest):
                     },
                 },
                 id="test_check_state",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
             pytest.param(
                 {
@@ -249,6 +253,7 @@ class TestAddRule(BaseTest):
                     },
                 },
                 id="test_keep_state",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
             pytest.param(
                 {
@@ -265,6 +270,7 @@ class TestAddRule(BaseTest):
                     },
                 },
                 id="test_record_state",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
         ],
     )
@@ -370,7 +376,8 @@ class TestAddRule(BaseTest):
             ),
             pytest.param(("pipe 42", Insn(IpFwOpcode.O_PIPE, arg1=42)), id="pipe_42"),
             pytest.param(
-                ("skipto 42", Insn(IpFwOpcode.O_SKIPTO, arg1=42)), id="skipto_42"
+                ("skipto 42", Insn(IpFwOpcode.O_SKIPTO, arg1=42)), id="skipto_42",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
             pytest.param(
                 ("netgraph 42", Insn(IpFwOpcode.O_NETGRAPH, arg1=42)), id="netgraph_42"
@@ -386,7 +393,8 @@ class TestAddRule(BaseTest):
             ),
             pytest.param(("tee 42", Insn(IpFwOpcode.O_TEE, arg1=42)), id="tee_42"),
             pytest.param(
-                ("call 420", Insn(IpFwOpcode.O_CALLRETURN, arg1=420)), id="call_420"
+                ("call 420", Insn(IpFwOpcode.O_CALLRETURN, arg1=420)), id="call_420",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
             # TOK_FORWARD
             pytest.param(
@@ -400,7 +408,8 @@ class TestAddRule(BaseTest):
             ),
             pytest.param(("reass", InsnEmpty(IpFwOpcode.O_REASS)), id="reass"),
             pytest.param(
-                ("return", InsnEmpty(IpFwOpcode.O_CALLRETURN, is_not=True)), id="return"
+                ("return", InsnEmpty(IpFwOpcode.O_CALLRETURN, is_not=True)), id="return",
+                marks=pytest.mark.xfail(reason="https://bugs.freebsd.org/289146"),
             ),
         ],
     )
