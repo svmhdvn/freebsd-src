@@ -78,9 +78,7 @@ CIIMAGE=	ci-${OSRELEASE}-${GITREV}-${KERNCONF}.${FORMAT}
 CIDISK?=	${.OBJDIR}/${CIIMAGE}
 VMSIZE?=	6g
 CITYPE?=	full
-KYUA_TEST_FILTERS?=
-META_TAR!=mktemp /tmp/meta.XXXXXX
-META_DIR!=mktemp -d /tmp/meta.XXXXXX
+KYUA_TEST_FILTERS_FILE?=/dev/null
 META_DIROUT!=mktemp -d /tmp/meta.XXXXXX
 DISC_CAM!=truncate -s 128m /tmp/disk-cam
 EXTRA_DISK_NUM?=5
@@ -139,9 +137,9 @@ KLDFILEMONISLOADED!=kldload -q -n filemon 2>/dev/null && echo "1" || echo "0"
 METAMODE?=-DWITH_META_MODE
 .endif
 
-CLEANFILES+=	${CIDISK} ${.OBJDIR}/ci.img ${META_TAR}
+CLEANFILES+=	${CIDISK} ${.OBJDIR}/ci.img
 IMAGEDIR=	${.OBJDIR}/ci-buildimage
-CLEANDIRS+=	${IMAGEDIR}
+CLEANDIRS+=	${IMAGEDIR} ${META_DIROUT}
 
 portinstall: portinstall-pkg portinstall-qemu portinstall-expect portinstall-${TARGET_ARCH:tl} .PHONY
 
@@ -196,17 +194,14 @@ ci-buildimage: ${QEMUTGT} ci-buildkernel-${TARGET_ARCH:tl} .PHONY
 	touch ${.TARGET}
 
 ci-create-meta: .PHONY
-	truncate -s 512M ${META_TAR}
-	tar rvf ${META_TAR} -C ${META_DIR} .
+	cp ${KYUA_TEST_FILTERS_FILE} ${META_DIROUT}/kyua_test_filters.txt
 
 ci-extract-meta: .PHONY
 .if ${CITYPE:tl} == "full"
-	tar xfv ${META_TAR} -C ${META_DIROUT}
-	rm -rf ${META_TAR} ${META_DIR}
 	chmod 0755 ${META_DIROUT}
 	@echo "Extracted kyua reports to ${META_DIROUT}"
 .else
-	rm -rf ${META_TAR} ${META_DIR} ${META_DIROUT}
+	rm -rf ${META_DIROUT}
 .endif
 
 ci-runtest: ci-buildimage-${TARGET_ARCH:tl} portinstall .PHONY
