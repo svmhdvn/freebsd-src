@@ -33,7 +33,7 @@ ci-runtest-amd64: .PHONY
 		-s 0:0,hostbridge \
 		-s 1:0,lpc \
 		-s 2:0,virtio-blk,${CIDISK} \
-		-s 3:0,virtio-blk,${META_TAR} \
+		-s 3:0,virtio-9p,meta=${META_DIROUT} \
 		${BHYVE_EXTRA_DISK_PARAM} \
 		-l com1,stdio \
 		${TEST_VM_NAME}; \
