@@ -32,14 +32,11 @@ start_cmd="firstboot_ci_run"
 stop_cmd=":"
 os_arch=$(uname -p)
 parallelism=$(nproc)
-tardev=/dev/vtbd1
 metadir=/meta
-istar=$(file -s ${tardev} | grep "POSIX tar archive" | wc -l)
 
 load_rc_config $name
 : ${freebsdci_enable:="NO"}
 : ${freebsdci_type:="full"}
-: ${freebsdci_test_filters:=""}
 PATH="${PATH}:/usr/local/sbin:/usr/local/bin"
 
 auto_shutdown()
@@ -72,26 +69,21 @@ full_tests()
 	echo "--------------------------------------------------------------"
 	echo "BOOT sequence COMPLETED"
 	echo "TEST sequence STARTED"
-	if [ "${istar}" -eq 1 ]; then
-		rm -fr ${metadir}
-		mkdir -p ${metadir}
-		tar xvf ${tardev} -C ${metadir}
-		cd /usr/tests
+	rm -fr ${metadir}
+	mkdir -p ${metadir}
+	if mount -t p9fs meta ${metadir}; then
+		cd ${metadir}
 		set +e
-		kyua \
-			-v parallelism=${parallelism} \
-			test ${freebsdci_test_filters}
+		xargs kyua -v parallelism=${parallelism} test -k /usr/tests/Kyuafile -r kyua-results.db < ${metadir}/kyua_test_filters.txt
 		rc=$?
 		set -e
 		if [ ${rc} -ne 0 ] && [ ${rc} -ne 1 ]; then
 			exit ${rc}
 		fi
-		kyua report --verbose --results-filter passed,skipped,xfail,broken,failed --output test-report.txt
-		kyua report-junit --output=test-report.xml
-		mv test-report.* /${metadir}
-		tar cvf ${tardev} -C ${metadir} .
+		kyua report -r kyua-results.db --verbose --results-filter passed,skipped,xfail,broken,failed --output test-report.txt
+		kyua report-junit -r kyua-results.db --output=test-report.xml
 	else
-		echo "ERROR: no device with POSIX tar archive format found."
+		echo "ERROR: no META_DIROUT p9fs share found."
 		# Don't shutdown because this is not run in unattended mode
 		exit 1
 	fi
