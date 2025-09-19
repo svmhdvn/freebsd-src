@@ -32,14 +32,11 @@ start_cmd="firstboot_ci_run"
 stop_cmd=":"
 os_arch=$(uname -p)
 parallelism=$(nproc)
-tardev=/dev/vtbd1
 metadir=/meta
-istar=$(file -s ${tardev} | grep "POSIX tar archive" | wc -l)
 
 load_rc_config $name
 : ${freebsdci_enable:="NO"}
 : ${freebsdci_type:="full"}
-: ${freebsdci_test_filters:=""}
 PATH="${PATH}:/usr/local/sbin:/usr/local/bin"
 
 auto_shutdown()
@@ -59,10 +56,9 @@ auto_shutdown()
 
 set_environment()
 {
-	if [ "${istar}" -eq 1 ]; then
-		rm -fr ${metadir}
-		mkdir -p ${metadir}
-		tar xvf ${tardev} -C ${metadir}
+	rm -fr ${metadir}
+	mkdir -p ${metadir}
+	if mount -t p9fs meta ${metadir}; then
 		ci_env_file=$(set -- "${metadir}"/ci-*.env; \
 			[ "$#" -eq 1 ] && printf '%s\n' "$1")
 		if [ -z "${ci_env_file}" ]; then
@@ -71,11 +67,10 @@ set_environment()
 			env >> "${ci_env_file}"
 		fi
 	else
-		echo "ERROR: no device with POSIX tar archive format found."
+		echo "ERROR: no p9fs share found for test output."
 		# Don't shutdown because this is not run in unattended mode
 		exit 1
 	fi
-
 }
 
 smoke_tests()
@@ -93,19 +88,16 @@ full_tests()
 	echo "--------------------------------------------------------------"
 	echo "BOOT sequence COMPLETED"
 	echo "TEST sequence STARTED"
-	cd /usr/tests
+	cd ${metadir}
 	set +e
-	kyua \
-		-v parallelism=${parallelism} \
-		test ${freebsdci_test_filters}
+	xargs kyua -v parallelism=${parallelism} test -k /usr/tests/Kyuafile -r kyua-results.db < kyua_test_filters.txt
 	rc=$?
 	set -e
 	if [ ${rc} -ne 0 ] && [ ${rc} -ne 1 ]; then
 		exit ${rc}
 	fi
-	kyua report --verbose --results-filter passed,skipped,xfail,broken,failed --output test-report.txt
-	kyua report-junit --output=test-report.xml
-	mv test-report.* /${metadir}
+	kyua report -r kyua-results.db --verbose --results-filter passed,skipped,xfail,broken,failed --output test-report.txt
+	kyua report-junit -r kyua-results.db --output=test-report.xml
 	echo "TEST sequence COMPLETED"
 	echo "INITIATING system SHUTDOWN"
 	echo "--------------------------------------------------------------"
@@ -119,7 +111,6 @@ firstboot_ci_run()
 	elif [ "$freebsdci_type" = "full" ]; then
 		full_tests
 	fi
-	tar cvf ${tardev} -C ${metadir} .
 	auto_shutdown
 }
 

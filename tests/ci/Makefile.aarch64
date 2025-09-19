@@ -30,7 +30,7 @@ ci-runtest-aarch64: .PHONY
 		-c ${PARALLEL_JOBS} -m ${VM_MEM_SIZE} \
 		-s 0:0,hostbridge \
 		-s 2:0,virtio-blk,${CIDISK} \
-		-s 3:0,virtio-blk,${META_TAR} \
+		-s 3:0,virtio-9p,meta=${META_DIROUT} \
 		${BHYVE_EXTRA_DISK_PARAM} \
 		-o console=stdio \
 		-o bootrom=/usr/local/share/u-boot/u-boot-bhyve-arm64/u-boot.bin \

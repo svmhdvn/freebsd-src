@@ -78,11 +78,9 @@ CIIMAGE=	ci-${OSRELEASE}-${GITREV}-${KERNCONF}.${FORMAT}
 CIDISK?=	${.OBJDIR}/${CIIMAGE}
 VMSIZE?=	6g
 CITYPE?=	full
-KYUA_TEST_FILTERS?=
-META_TAR!=mktemp /tmp/meta.XXXXXX
-META_DIR!=mktemp -d /tmp/meta.XXXXXX
+KYUA_TEST_FILTERS_FILE?=/dev/null
 META_DIROUT!=mktemp -d /tmp/meta.XXXXXX
-ENV_FILE=	${META_DIR}/ci-${OSRELEASE}-${GITREV}-${KERNCONF}.env
+ENV_FILE=	${META_DIROUT}/ci-${OSRELEASE}-${GITREV}-${KERNCONF}.env
 DISC_CAM!=truncate -s 128m /tmp/disk-cam
 EXTRA_DISK_NUM?=5
 DISK_NUMBERS!=jot - 1 ${EXTRA_DISK_NUM}
@@ -146,9 +144,9 @@ WSTAGEDIR!=	${IMAKE} -f Makefile.inc1 -C ${WORLDDIR} -V WSTAGEDIR
 PKG_ABI_FILE?=	${WSTAGEDIR}/usr/bin/uname
 PKG_ABI?=	$$(${PKG_CMD} -o ABI_FILE=${PKG_ABI_FILE} config ABI)
 
-CLEANFILES+=	${CIDISK} ${.OBJDIR}/ci.img ${META_TAR}
+CLEANFILES+=	${CIDISK} ${.OBJDIR}/ci.img
 IMAGEDIR=	${.OBJDIR}/ci-buildimage
-CLEANDIRS+=	${IMAGEDIR}
+CLEANDIRS+=	${IMAGEDIR} ${META_DIROUT}
 
 portinstall: portinstall-pkg portinstall-qemu portinstall-expect portinstall-${TARGET_ARCH:tl} .PHONY
 
@@ -244,12 +242,9 @@ ci-get-env: .PHONY
 	@echo "MACHINE_CPUARCH='${MACHINE_CPUARCH}'" >> ${ENV_FILE}
 
 ci-create-meta: ci-get-env .PHONY
-	truncate -s 512M ${META_TAR}
-	tar rvf ${META_TAR} -C ${META_DIR} .
+	cp ${KYUA_TEST_FILTERS_FILE} ${META_DIROUT}/kyua_test_filters.txt
 
 ci-extract-meta: .PHONY
-	tar xfv ${META_TAR} -C ${META_DIROUT}
-	rm -rf ${META_TAR} ${META_DIR}
 	chmod 0755 ${META_DIROUT}
 	@echo "Extracted kyua reports to ${META_DIROUT}"
 
