@@ -44,6 +44,9 @@ g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
 	int bx, by, decpt, ex, ey, i, j, mode;
 	Bigint *x, *y, *z;
 	U *dd, ddx[2];
+#ifdef MULTIPLE_THREADS
+	ThInfo *TI = 0;
+#endif
 #ifdef Honor_FLT_ROUNDS /*{{*/
 	int Rounding;
 #ifdef Trust_FLT_ROUNDS /*{{ only define this if FLT_ROUNDS really works! */
@@ -60,7 +63,7 @@ g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
 #define Rounding FPI_Round_near
 #endif /*}}*/
 
-	if (bufsize < 10 || bufsize < ndig + 8)
+	if (bufsize < 10 || bufsize < (size_t)(ndig + 8))
 		return 0;
 
 	dd = (U*)dd0;
@@ -105,31 +108,31 @@ g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
 		dd = ddx;
 		L = dd->L;
 		}
-	z = d2b(dval(&dd[0]), &ex, &bx);
+	z = d2b(dval(&dd[0]), &ex, &bx MTb);
 	if (dval(&dd[1]) == 0.)
 		goto no_y;
 	x = z;
-	y = d2b(dval(&dd[1]), &ey, &by);
+	y = d2b(dval(&dd[1]), &ey, &by MTb);
 	if ( (i = ex - ey) !=0) {
 		if (i > 0) {
-			x = lshift(x, i);
+			x = lshift(x, i MTb);
 			ex = ey;
 			}
 		else
-			y = lshift(y, -i);
+			y = lshift(y, -i MTb);
 		}
 	if ((L[_0] ^ L[2+_0]) & 0x80000000L) {
-		z = diff(x, y);
+		z = diff(x, y MTb);
 		if (L[_0] & 0x80000000L)
 			z->sign = 1 - z->sign;
 		}
 	else {
-		z = sum(x, y);
+		z = sum(x, y MTb);
 		if (L[_0] & 0x80000000L)
 			z->sign = 1;
 		}
-	Bfree(x);
-	Bfree(y);
+	Bfree(x MTb);
+	Bfree(y MTb);
  no_y:
 	bits = zx = z->x;
 	for(i = 0; !*zx; zx++)
@@ -152,8 +155,8 @@ g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
 		}
 	mode = 2;
 	if (ndig <= 0) {
-		if (bufsize < (int)(fpi.nbits * .301029995664) + 10) {
-			Bfree(z);
+		if (bufsize < (size_t)(fpi.nbits * .301029995664) + 10) {
+			Bfree(z MTb);
 			return 0;
 			}
 		mode = 0;
@@ -162,9 +165,10 @@ g_ddfmt(char *buf, double *dd0, int ndig, size_t bufsize)
 	fpi.emax = 2046-1023-106+1;
 	fpi.rounding = Rounding;
 	fpi.sudden_underflow = 0;
+	fpi.int_max = Int_max;
 	i = STRTOG_Normal;
 	s = gdtoa(&fpi, ex, bits, &i, mode, ndig, &decpt, &se);
 	b = g__fmt(buf, s, se, decpt, z->sign, bufsize);
-	Bfree(z);
+	Bfree(z MTb);
 	return b;
 	}

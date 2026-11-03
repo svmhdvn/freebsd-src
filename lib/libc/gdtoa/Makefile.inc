@@ -2,7 +2,7 @@
 .PATH: ${LIBC_SRCTOP}/gdtoa
 
 MISRCS+=_hdtoa.c _hldtoa.c _ldtoa.c glue.c
-GDTOASRCS+=dmisc.c dtoa.c gdtoa.c gethex.c gmisc.c \
+GDTOASRCS+=g__fmt.c dmisc.c dtoa.c gdtoa.c gethex.c gmisc.c \
 	hd_init.c hexnan.c misc.c smisc.c \
 	strtod.c strtodg.c strtof.c strtord.c sum.c ulp.c
 
@@ -15,5 +15,5 @@ MISRCS+=gdtoa_${src}
 CLEANFILES+=gdtoa_${src}
 gdtoa_${src}: ${SRCTOP}/contrib/gdtoa/${src} .NOMETA
 	ln -sf ${.ALLSRC} ${.TARGET}
-CFLAGS.gdtoa_${src}+=-fno-strict-aliasing
+CFLAGS.gdtoa_${src}+=-fno-strict-aliasing -DHonor_FLT_ROUNDS -DUSE_LOCALE -DNO_LOCALE_CACHE
 .endfor

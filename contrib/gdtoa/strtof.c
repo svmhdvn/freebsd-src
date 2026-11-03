@@ -29,8 +29,6 @@ THIS SOFTWARE.
 /* Please send bug reports to David M. Gay (dmg at acm dot org,
  * with " at " changed at "@" and " dot " changed to ".").	*/
 
-/* $FreeBSD$ */
-
 #include "gdtoaimp.h"
 
  float
@@ -40,7 +38,7 @@ strtof_l(s, sp, loc) CONST char *s; char **sp; locale_t loc;
 strtof_l(CONST char *s, char **sp, locale_t loc)
 #endif
 {
-	static FPI fpi0 = { 24, 1-127-24+1,  254-127-24+1, 1, SI };
+	static FPI fpi0 = { 24, 1-127-24+1,  254-127-24+1, 1, SI, 0 /*unused*/ };
 	ULong bits[1];
 	Long exp;
 	int k;
@@ -53,19 +51,16 @@ strtof_l(CONST char *s, char **sp, locale_t loc)
 
 	k = strtodg_l(s, sp, fpi, &exp, bits, loc);
 	switch(k & STRTOG_Retmask) {
+	  default: /* unused */
 	  case STRTOG_NoNumber:
 	  case STRTOG_Zero:
 		u.L[0] = 0;
 		break;
 
 	  case STRTOG_Normal:
+	  case STRTOG_NaNbits:
 		u.L[0] = (bits[0] & 0x7fffff) | ((exp + 0x7f + 23) << 23);
 		break;
-
-	  case STRTOG_NaNbits:
-		/* FreeBSD local: always return a quiet NaN */
-		u.L[0] = bits[0] | 0x7fc00000;
-		break;	      
 
 	  case STRTOG_Denormal:
 		u.L[0] = bits[0];

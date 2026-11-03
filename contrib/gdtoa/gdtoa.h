@@ -34,6 +34,7 @@ THIS SOFTWARE.
 
 #include "arith.h"
 #include <stddef.h> /* for size_t */
+#include "xlocale_private.h"
 
 #ifndef Long
 #define Long int
@@ -90,6 +91,7 @@ FPI {
 	int emax;
 	int rounding;
 	int sudden_underflow;
+	int int_max;
 	} FPI;
 
 enum {	/* FPI.rounding values: same as FLT_ROUNDS */
@@ -105,19 +107,25 @@ extern "C" {
 
 extern char* dtoa  ANSI((double d, int mode, int ndigits, int *decpt,
 			int *sign, char **rve));
-extern char* gdtoa ANSI((FPI *fpi, int be, ULong *bits, int *kindp,
+extern char* gdtoa ANSI((CONST FPI *fpi, int be, ULong *bits, int *kindp,
 			int mode, int ndigits, int *decpt, char **rve));
 extern void freedtoa ANSI((char*));
 extern float  strtof ANSI((CONST char *, char **));
-extern double strtod ANSI((CONST char *, char **));
-extern int strtodg ANSI((CONST char*, char**, FPI*, Long*, ULong*));
+extern double strtod_l ANSI((const char *s00, char **se, locale_t));
+extern int strtodg_l ANSI((CONST char*, char**, CONST FPI*, Long*, ULong*, locale_t));
 
-extern char*	g_ddfmt  ANSI((char*, double*, int, size_t));
-extern char*	g_dfmt   ANSI((char*, double*, int, size_t));
-extern char*	g_ffmt   ANSI((char*, float*,  int, size_t));
-extern char*	g_Qfmt   ANSI((char*, void*,   int, size_t));
-extern char*	g_xfmt   ANSI((char*, void*,   int, size_t));
-extern char*	g_xLfmt  ANSI((char*, void*,   int, size_t));
+extern char*	g_ddfmt   ANSI((char*, double*, int, size_t));
+extern char*	g_ddfmt_p ANSI((char*, double*,	int, size_t, int));
+extern char*	g_dfmt    ANSI((char*, double*, int, size_t));
+extern char*	g_dfmt_p  ANSI((char*, double*,	int, size_t, int));
+extern char*	g_ffmt    ANSI((char*, float*,  int, size_t));
+extern char*	g_ffmt_p  ANSI((char*, float*,	int, size_t, int));
+extern char*	g_Qfmt    ANSI((char*, void*,   int, size_t));
+extern char*	g_Qfmt_p  ANSI((char*, void*,	int, size_t, int));
+extern char*	g_xfmt    ANSI((char*, void*,   int, size_t));
+extern char*	g_xfmt_p  ANSI((char*, void*,	int, size_t, int));
+extern char*	g_xLfmt   ANSI((char*, void*,   int, size_t));
+extern char*	g_xLfmt_p ANSI((char*, void*,	int, size_t, int));
 
 extern int	strtoId  ANSI((CONST char*, char**, double*, double*));
 extern int	strtoIdd ANSI((CONST char*, char**, double*, double*));
@@ -125,11 +133,11 @@ extern int	strtoIf  ANSI((CONST char*, char**, float*, float*));
 extern int	strtoIQ  ANSI((CONST char*, char**, void*, void*));
 extern int	strtoIx  ANSI((CONST char*, char**, void*, void*));
 extern int	strtoIxL ANSI((CONST char*, char**, void*, void*));
-extern int	strtord  ANSI((CONST char*, char**, int, double*));
+extern int	strtord_l ANSI((CONST char *, char **, int, double *, locale_t));
 extern int	strtordd ANSI((CONST char*, char**, int, double*));
 extern int	strtorf  ANSI((CONST char*, char**, int, float*));
-extern int	strtorQ  ANSI((CONST char*, char**, int, void*));
-extern int	strtorx  ANSI((CONST char*, char**, int, void*));
+extern int	strtorQ_l ANSI((CONST char *, char **, int, void *, locale_t));
+extern int	strtorx_l ANSI((CONST char *, char **, int, void *, locale_t));
 extern int	strtorxL ANSI((CONST char*, char**, int, void*));
 #if 1
 extern int	strtodI  ANSI((CONST char*, char**, double*));

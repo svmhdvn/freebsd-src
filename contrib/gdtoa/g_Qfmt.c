@@ -56,7 +56,7 @@ g_Qfmt(buf, V, ndig, bufsize) char *buf; char *V; int ndig; size_t bufsize;
 g_Qfmt(char *buf, void *V, int ndig, size_t bufsize)
 #endif
 {
-	static FPI fpi0 = { 113, 1-16383-113+1, 32766 - 16383 - 113 + 1, 1, 0 };
+	static FPI fpi0 = { 113, 1-16383-113+1, 32766 - 16383 - 113 + 1, 1, 0, Int_max };
 	char *b, *s, *se;
 	ULong bits[4], *L, sign;
 	int decpt, ex, i, mode;
@@ -68,7 +68,7 @@ g_Qfmt(char *buf, void *V, int ndig, size_t bufsize)
 
 	if (ndig < 0)
 		ndig = 0;
-	if (bufsize < ndig + 10)
+	if (bufsize < (size_t)(ndig + 10))
 		return 0;
 
 	L = (ULong*)V;

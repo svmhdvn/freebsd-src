@@ -42,11 +42,6 @@
  * You must define CHAR to either char or wchar_t prior to including this.
  */
 
-
-
-#define	dtoa		__dtoa
-#define	freedtoa	__freedtoa
-
 #include <float.h>
 #include <math.h>
 #include "floatio.h"
